@@ -29,11 +29,12 @@ int main()
     const float a[] = { 1.0f, 2.0f };
     v6 = vec2(a); //explicit vec(const array_type & scalars)
     const float a2[] = { 1.0f, 2.0f, 3.0f };
+    wcout << a2 << L'\n';
     v6 = vec2(&a[0], 2); //explicit vec(const scalar_type * const scalars, const unsigned int count)
 
     p.x(1.0f);
     auto x = p.x();
-    x = 0;
+    cout << x << '\n';
 
     //TakesSize(p); // should fail
     TakesSize(static_cast<sizev>(p));
@@ -45,8 +46,10 @@ int main()
     cout << s2.width() << '\n';
     //const sizev s3 = p; // fails to call explicit constructor
     const sizev s3 = sizev(p); // explicit constructor
+    wcout << s3 << L'\n';
     //sizei si = 1.0; // should fail
     sizevi si = sizevi(static_cast<int>(1.0));
+    wcout << si << L'\n';
 
     vec2 v1(1.0f); //explicit vec(const scalar_type value)
     v1 = static_cast<decltype(v1)>(s);
@@ -57,6 +60,7 @@ int main()
     cout << a3 << '\n';
     const float f1 = v1[0]; //const scalar_type& operator [](const int index) const
     const float f2 = v1[1];
+    wcout << f1 << ' ' << f2 << L'\n';
     //const float f3 = v1[2]; // shouldn't work TODO: debug bounds checking
     v1[0] = 8.0f; //scalar_type& operator [](const int index)
 
@@ -64,22 +68,29 @@ int main()
     vec2i vi2 = { 1, 2 };
     const bool equal = vi1 == vi2; //bool operator ==(const vec & rhs) const
     const bool not_equal = vi1 != vi2; //bool operator !=(const vec & rhs) const
+    wcout << equal << ' ' << not_equal << L'\n';
 
     //bool operator <(const vec & rhs) const
     //bool operator <=(const vec & rhs) const
     //bool operator >(const vec & rhs) const
     //bool operator >=(const vec & rhs) const
     auto cr = vi1 < vi2;
+    cout << cr << ' ';
     cr = vi1 <= vi2;
+    cout << cr << ' ';
     cr = vi1 > vi2;
+    cout << cr << ' ';
     cr = vi1 >= vi2;
+    cout << cr << '\n';
 
     const auto vils = vi1.length_squared(); //scalar_type LengthSquared() const
     const float v6ls = v6.length_squared();
     const float v6l = v6.length(); //scalar_type Length() const
+    cout << vils << ' ' << v6ls << ' ' << v6l << '\n';
 
     const vec2 u1 = v6.unit(); //vec unit() const
     const vec2 ut = v6.unit();
+    cout << u1 << ' ' << ut << '\n';
 
     vec2 u2;
     u2 = v6.unit();
@@ -94,20 +105,24 @@ int main()
     cout << "rotated: " << v3 << '\n';
 
     const auto d1 = v2.dot(v3); // scalar_type dot(const vec & rhs) const
+    cout << d1 << '\n';
 
     vec3 v3a = { 1.0f, 0.0f, 0.0f };
     vec3 v3b = { 0.0f, 1.0f, 0.0f };
     const vec3 c1 = v3a.cross(v3b); // derived_type cross(const vec& rhs) const
+    cout << c1 << '\n';
 
     pointi pi;
-    cout << "point: " << p << '\n';
+    cout << "point: " << pi << '\n';
 
     vec3 v3c = v3a + v3b; //derived_type operator +(const vec & rhs) const
     vec3 v3d = v3a + 2.0f; //derived_type operator +(const scalar_type rhs) const
     v3c += v3a; //vec& operator +=(const vec & rhs)
     v3c += 2.0f; //vec& operator +=(const scalar_type rhs)
+    cout << v3d << '\n';
 
     vec3 neg = -v3a; //derived_type operator -() const
+    cout << neg << '\n';
 
     v3c = v3a - v3b; //derived_type operator -(const vec & rhs) const
     v3c = v3a - 2.0f; //derived_type operator -(const scalar_type rhs) const
@@ -142,6 +157,8 @@ int main()
 
     const vec3 sn = get_surface_normal(v3a, v3b, v3c); // T get_surface_normal(const T& v0, const T& v1, const T& v2)
 
+    cout << av3 << ' ' << av4 << ' ' << fff  << ' ' << sn << '\n';
+
     // 'Dst clg::get_surface_normal(
     // const clg::impl::vec<SrcT,SrcL,SrcU> &,
     // const clg::impl::vec<SrcT,SrcL,SrcU> &,
@@ -168,6 +185,8 @@ int main()
     //rect r8t(size(3.0f, 4.0f), point(1.0f, 2.0f)); // should fail
 
     r6 = r7; //rect& operator =(const rect& rhs)
+    wcout << r3 << L' ' << r4 << L' ' << r5 << L' ' << r6 << L' ' << r7 << L'\n';
+
 
     const point pa = r6.location(); //const point_type& location() const
     r6.location(point(5.0f, 6.0f)); //point_type& location()
@@ -192,11 +211,14 @@ int main()
     r6.bottom(x1); //void SetBottom(const scalar_type bottom)
 
     bool b2 = r6 == r7; //bool operator ==(const rect& rhs) const
+    cout << b2 << ' ';
     //bool b2t = r6 == r3; // should fail
     b2 = r6 != r7; //bool operator !=(const rect& rhs) const
-
+    cout << b2 << ' ';
     b2 = r7.contains(point(5.0f, 5.0f)); //bool contains(const point_type& point) const
+    cout << b2 << ' ';
     b2 = r7.overlaps(r8); //bool overlaps(const rect& rectangle) const
+    cout << b2 << '\n';
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -375,16 +397,16 @@ int main()
     rct(1, 1) = 50;
     cout << rct << '\n';
 
-    cout << translation_matrix({ 4, 5 }) << '\n';
-    cout << translation_matrix({ 1.2f, 2.3f, 3.4f }) << '\n' << '\n';
+    cout << translation_matrix(vec2({ 4, 5 })) << '\n';
+    cout << translation_matrix(vec3({ 1.2f, 2.3f, 3.4f })) << '\n' << '\n';
 
     cout << rotation_matrix(trig<>::half_pi) << '\n';
     cout << rotation_matrix_z(trig<>::half_pi) << '\n';
     cout << rotation_matrix_y(trig<>::half_pi) << '\n';
     cout << rotation_matrix_x(trig<>::half_pi) << '\n' << '\n';
 
-    cout << scaling_matrix({ 1.2f, 2.3f }) << '\n';
-    cout << scaling_matrix({ 1.2f, 2.3f, 3.4f }) << '\n' << '\n';
+    cout << scaling_matrix(vec2({ 1.2f, 2.3f })) << '\n';
+    cout << scaling_matrix(vec3({ 1.2f, 2.3f, 3.4f })) << '\n' << '\n';
 
     cout << reflection_about_x_matrix() << '\n' << '\n';
     cout << reflection_about_y_matrix() << '\n' << '\n';

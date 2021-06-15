@@ -492,10 +492,10 @@ namespace clg { namespace impl
     /////////////////////
 
     // 2D translation
-    inline constexpr mat3 translation_matrix(const float(&translation)[2])
+    inline constexpr mat3 translation_matrix(const impl::vec<float, 2>& translation)
     {
         mat3 result;
-        for (auto i = 0u; i < array_count(translation); i++)
+        for (auto i = 0u; i < std::remove_reference_t<decltype(translation)>::dimension_count; i++)
         {
             result(1, i) = translation[i];
         }
@@ -503,10 +503,10 @@ namespace clg { namespace impl
     }
 
     // 3D translation
-    inline constexpr mat4 translation_matrix(const float(&translation)[3])
+    inline constexpr mat4 translation_matrix(const impl::vec<float, 3>& translation)
     {
         mat4 result;
-        for (auto i = 0u; i < array_count(translation); i++)
+        for (auto i = 0u; i < std::remove_reference_t<decltype(translation)>::dimension_count; i++)
         {
             result(3, i) = translation[i];
         }
@@ -556,10 +556,10 @@ namespace clg { namespace impl
     /////////////////
 
     // 2D scaling
-    inline constexpr mat3 scaling_matrix(const float(&scale)[2])
+    inline constexpr mat3 scaling_matrix(const impl::vec<float, 2>& scale)
     {
         mat3 result;
-        for (auto i = 0u; i < array_count(scale); i++)
+        for (auto i = 0u; i < std::remove_reference_t<decltype(scale)>::dimension_count; i++)
         {
             result(i, i) = scale[i];
         }
@@ -567,10 +567,10 @@ namespace clg { namespace impl
     }
 
     // 3D scaling
-    inline constexpr mat4 scaling_matrix(const float(&scale)[3])
+    inline constexpr mat4 scaling_matrix(const impl::vec<float, 3>& scale)
     {
         mat4 result;
-        for (auto i = 0u; i < array_count(scale); i++)
+        for (auto i = 0u; i < std::remove_reference_t<decltype(scale)>::dimension_count; i++)
         {
             result(i, i) = scale[i];
         }
@@ -692,7 +692,7 @@ namespace clg { namespace impl
 
     // Euler Transform Matrix
     /////////////////////////
-    inline constexpr mat4 euler_transfor_mmatrix(const float heading, const float pitch, const float roll)
+    inline mat4 euler_transfor_mmatrix(const float heading, const float pitch, const float roll)
     {
         // E(h, p, r) heading, pitch, roll = Rz(r)Rx(p)Ry(h)
         return rotation_matrix_z(roll) *=

@@ -32,7 +32,7 @@ This library is broken into three header files. Almost everything in the `clg::`
     - pointer alignment
     - array counting template
     - basic vector and matrix operations that operate on plain-old-arrays
-2. **clg_vector.hpp** (uses `clg_math.hpp`)
+2. **clg_vector.hpp** (includes _clg_math.hpp_)
     - base vector class template `clg::impl::vec<ScalarT, Dimensions>`
         - `ScalarT` - type of the scalar components
         - `Dimensions` - number of scalar components
@@ -50,7 +50,7 @@ This library is broken into three header files. Almost everything in the `clg::`
     - `std::swap()` support
     - `std::ostream` overloads for quickly writing vector contents to a C++ stream
     - many common vector operations...
-3. **clg_rectanble.hpp** (uses `clg_vector.hpp`)
+3. **clg_rectanble.hpp** (includes _clg_vector.hpp_)
     - rectangle class template `clg::impl::rect<ScalarT, YAxesPolicy, BoundsCheckPolicy>`
         - `ScalarT` - type of the scalar components
         - `YAxesPolicy` - template policy for how to represent the y-axis:
@@ -68,7 +68,7 @@ This library is broken into three header files. Almost everything in the `clg::`
     - a couple utility functions for interoperating with GUI rects Win32 `RECT` and Cocoa `CGRect`
     - `std::swap()` support
     - `std::ostream` overloads for quickly writing contents to a C++ stream
-3. **clg_matrix.hpp** (uses `clg_vector.hpp`)
+3. **clg_matrix.hpp** (includes _clg_vector.hpp_)
     - matrix class template `clg::impl::mat<ScalarT, Columns, Rows>`
         - `ScalarT` - type of the scalar components
         - `Columns` - number of matrix columns

@@ -548,7 +548,7 @@ namespace clg { namespace impl
     template<typename vec_type, typename vec_t = impl::vec<typename vec_type::scalar_type, vec_type::dimension_count>>
     inline constexpr vec_type abs(const vec_type& value)
     {
-        return static_cast<vec_type>(impl::abs<vec_t::scalar_type, vec_t::dimension_count>(value));
+        return static_cast<vec_type>(impl::abs<typename vec_t::scalar_type, vec_t::dimension_count>(value));
     }
 
     // Creates a new vector of a different type via a static_cast of each

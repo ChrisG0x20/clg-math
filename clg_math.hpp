@@ -112,7 +112,7 @@ namespace clg
     template<unsigned int BytesOfAlignment>
     inline constexpr void* align_pointer(const void* const pUnaligned)
     {
-        const char* const pByte = pUnaligned;
+        const char* const pByte = static_cast<const char* const>(pUnaligned);
         const uintptr_t alignment = BytesOfAlignment - 1;
         return reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(pByte + alignment) & ~alignment);
     }
