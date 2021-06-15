@@ -87,7 +87,7 @@ namespace clg { namespace impl
 
         constexpr mat()
         {
-            clg::mat::assign_identity<row_count, column_count>(_scalars);
+            clg::mat::assign_identity<column_count, row_count>(_scalars, 1.0f);
         }
 
         constexpr mat(const mat& original)
@@ -102,12 +102,63 @@ namespace clg { namespace impl
 
         explicit constexpr mat(const scalar_type* const scalars, const size_t count)
         {
-            clg::vec::assign(_scalars, scalars, count);
+            if (count < element_count)
+            {
+                clg::mat::assign_identity<column_count, row_count>(_scalars, 1.0f);
+            }
+            clg::vec::partial_assign(_scalars, scalars, count);
         }
 
-        explicit constexpr mat(const scalar_type value)
+        /// <summary>
+        /// If there is a single scalar parameter to a matrix constructor, it is used to initialize all
+        /// the components on the matrix’s diagonal, with the remaining components initialized to 0.0.
+        /// </summary>
+        explicit constexpr mat(const scalar_type diagonal_value)
         {
-            clg::vec::assign(_scalars, value);
+            clg::mat::assign_identity<column_count, row_count>(_scalars, diagonal_value);
+        }
+
+        /// <summary>
+        /// Constructing a matrix from multiple scalars or vectors, or a mixture of these. Matrix components will be
+        /// constructed and consumed in column major order. In these cases, there must be enough components provided in
+        /// the arguments to provide an initializer for every component in the constructed value.  It is a compile-time
+        /// error to provide extra arguments beyond this last used argument.
+        /// </summary>
+        template<typename... Args>
+        explicit constexpr mat(const scalar_type first, const Args&... args)
+        {
+            mixture_constructor_unpack<0>(first, args...);
+        }
+
+        /// <summary>
+        /// Constructing a matrix from multiple scalars or vectors, or a mixture of these. Matrix components will be
+        /// constructed and consumed in column major order. In these cases, there must be enough components provided in
+        /// the arguments to provide an initializer for every component in the constructed value.  It is a compile-time
+        /// error to provide extra arguments beyond this last used argument.
+        /// </summary>
+        template<unsigned int dimension_count, typename... Args>
+        explicit constexpr mat(const impl::vec<scalar_type, dimension_count>& first, const Args&... args)
+        {
+            mixture_constructor_unpack<0>(first, args...);
+        }
+
+        /// <summary>
+        /// If a matrix is constructed from a matrix, then each component (column i, row j) in the result that has a
+        /// corresponding component (column i, row j) in the argument will be initialized from there.  All other
+        /// components will be initialized to the identity matrix.  If a matrix argument is given to a matrix
+        /// constructor, it is a compile-time error to have any other arguments.
+        /// </summary>
+        template<unsigned int src_column_count, unsigned int src_row_count>
+        explicit constexpr mat(const mat<scalar_type, src_column_count, src_row_count>& original)
+        {
+            clg::mat::assign_identity<column_count, row_count>(_scalars, 1.0f);
+            for (auto j = 0u; j < std::min(column_count, src_column_count); j++)
+            {
+                for (auto i = 0u; i < std::min(row_count, src_row_count); i++)
+                {
+                    _scalars[row_count * j + i] = original(j, i);
+                }
+            }
         }
 
         constexpr mat& operator =(const mat& rhs)
@@ -456,6 +507,38 @@ namespace clg { namespace impl
         }
 
     private:
+        template<unsigned int next_index>
+        constexpr void mixture_constructor_unpack(const scalar_type last_arg)
+        {
+            constexpr auto provided_element_count = next_index + 1u;
+            static_assert(provided_element_count <= element_count, "attempting to construct a matrix from too many elements");
+            static_assert(provided_element_count >= element_count, "attempting to construct a matrix from too few elements");
+            _scalars[next_index] = last_arg;
+        }
+
+        template<unsigned int next_index, unsigned int dimension_count>
+        constexpr void mixture_constructor_unpack(const impl::vec<scalar_type, dimension_count>& last_arg)
+        {
+            constexpr auto provided_element_count = next_index + dimension_count;
+            static_assert(provided_element_count <= element_count, "attempting to construct a matrix from too many elements");
+            static_assert(provided_element_count >= element_count, "attempting to construct a matrix from too few elements");
+            clg::vec::assign(reinterpret_cast<scalar_type(&)[dimension_count]>(_scalars[next_index]), last_arg.data());
+        }
+
+        template<unsigned int next_index, typename... Args>
+        constexpr void mixture_constructor_unpack(const scalar_type next_arg, const Args&... args)
+        {
+            _scalars[next_index] = next_arg;
+            mixture_constructor_unpack<next_index + 1u>(args...);
+        }
+
+        template<unsigned int next_index, unsigned int dimension_count, typename... Args>
+        constexpr void mixture_constructor_unpack(const impl::vec<scalar_type, dimension_count>& next_arg, const Args&... args)
+        {
+            clg::vec::assign(reinterpret_cast<scalar_type(&)[dimension_count]>(_scalars[next_index]), next_arg.data());
+            mixture_constructor_unpack<next_index + dimension_count>(args...);
+        }
+
         scalar_type _scalars[column_count * row_count];
     };
 

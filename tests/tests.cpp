@@ -157,7 +157,7 @@ int main()
 
     const vec3 sn = get_surface_normal(v3a, v3b, v3c); // T get_surface_normal(const T& v0, const T& v1, const T& v2)
 
-    cout << av3 << ' ' << av4 << ' ' << fff  << ' ' << sn << '\n';
+    cout << av3 << ' ' << av4 << ' ' << fff << ' ' << sn << '\n';
 
     // 'Dst clg::get_surface_normal(
     // const clg::impl::vec<SrcT,SrcL,SrcU> &,
@@ -354,7 +354,7 @@ int main()
     cout << (mat2() - mat2()) << '\n';
     cout << (mat2() - 4) << '\n';
     cout << (mat2() * 3) << '\n';
-    
+
     // 1 3 = 1*1+3*2, 1*3+3*4 =  7 15
     // 2 4 = 2*1+4*2, 2*3+4*4 = 10 22
     cout << (mat2({ 1, 2, 3, 4 }) * mat2({ 1, 2, 3, 4 })) << '\n';
@@ -436,12 +436,42 @@ int main()
 
     cout << cast_scalars<int>(mat2({ 1, 2, 3, 4 })) << '\n' << '\n';
     cout << cast_dimensions<2>(mat3({ 1, 2, 3, 4, 5, 6, 7, 8, 9 })) << '\n' << '\n';
-    cout << cast_dimensions<2,3>(mat3({ 1, 2, 3, 4, 5, 6, 7, 8, 9 })) << '\n' << '\n';
-    cout << cast_dimensions<3,2>(mat3({ 1, 2, 3, 4, 5, 6, 7, 8, 9 })) << '\n' << '\n';
+    cout << cast_dimensions<2, 3>(mat3({ 1, 2, 3, 4, 5, 6, 7, 8, 9 })) << '\n' << '\n';
+    cout << cast_dimensions<3, 2>(mat3({ 1, 2, 3, 4, 5, 6, 7, 8, 9 })) << '\n' << '\n';
     cout << cast_dimensions<3>(mat2({ 1, 2, 3, 4 })) << '\n' << '\n';
-    cout << cast_dimensions<2,3>(mat2({ 1, 2, 3, 4 })) << '\n' << '\n';
-    cout << cast_dimensions<3,2>(mat2({ 1, 2, 3, 4 })) << '\n' << '\n';
+    cout << cast_dimensions<2, 3>(mat2({ 1, 2, 3, 4 })) << '\n' << '\n';
+    cout << cast_dimensions<3, 2>(mat2({ 1, 2, 3, 4 })) << '\n' << '\n';
 
     cout << cast_column_matrix(vec4(1, 2, 3, 4)) << '\n' << '\n';
     cout << cast_row_matrix(vec4(1, 2, 3, 4)) << '\n' << '\n';
+
+    //mat3 colinit0(8.0f, 7.0f);
+    //cout << colinit0 << '\n' << '\n';
+    mat3 colinit01(8.0f, 7.0f, 6.0f, 5.0f, 1.0f, 2.0f, 3.0f, 4.0f, 9.0f);
+    cout << colinit01 << '\n' << '\n';
+    mat3 colinit1(vec3(1, 2, 3), 5.0f, 1.0f, 2.0f, 3.0f, vec2(4, 5));
+    cout << colinit1 << '\n' << '\n';
+    //mat3 colinit2(vec3(1, 2, 3), vec3(4, 5, 6));
+    //cout << colinit2 << '\n' << '\n';
+    mat3 colinit3(vec3(1, 2, 3), vec3(4, 5, 6), vec3(7, 8, 9));
+    cout << colinit3 << '\n' << '\n';
+    //mat3 colinit4(vec3(1, 2, 3), vec3(4, 5, 6), vec3(7, 8, 9), vec3(10, 11, 12)); // fails with static assert
+    //mat3 colinit4(vec3(1, 2, 3), vec3(4, 5, 6), vec3(7, 8, 9), 10.0f); // fails with static assert
+
+    //mat3 colinit4(vec2(1, 2));
+    //cout << colinit4 << '\n' << '\n';
+    //mat3 colinit5(vec2(1, 2), vec2(4, 5));
+    //cout << colinit5 << '\n' << '\n';
+    //mat3 colinit6(vec3(1, 2, 3), vec2(4, 5), vec3(7, 8, 9));
+    //cout << colinit6 << '\n' << '\n';
+    mat3 colinit7(vec3(1, 2, 3), vec2(4, 5), vec4(7, 8, 9, 10));
+    cout << colinit7 << '\n' << '\n';
+
+    mat3 colinit8(vec2(1, 3), vec2(4, 5), 8.0f, vec4(11, 12, 13, 14));
+    cout << colinit8 << '\n' << '\n';
+
+    mat2 b2st(colinit8);
+    cout << b2st << '\n' << '\n';
+    mat3 s2bt(b2st);
+    cout << s2bt << '\n' << '\n';
 }

@@ -155,6 +155,16 @@ namespace clg
             }
         }
 
+        // partial assignment of vectors with different dimension, truncates a larger src vector, and doesn't pad a larger destination
+        template<typename scalar_type, unsigned int dimension_count>
+        inline constexpr void partial_assign(scalar_type(&dst)[dimension_count], const scalar_type* const src, const size_t count) noexcept
+        {
+            for (auto i = 0u; i < std::min(count, static_cast<size_t>(dimension_count)); i++)
+            {
+                dst[i] = src[i];
+            }
+        }
+
         // assign count elements of a scalar array the elements of the destination vector
         // where count < dimension_count, fill remaining elements with zeros
         // where count > dimension_count, src is truncated to fit in dst
@@ -440,7 +450,7 @@ namespace clg
     {
         // assign the identity matrix to a column-major matrix
         template<unsigned int column_count, unsigned int row_count, typename scalar_type>
-        inline constexpr void assign_identity(scalar_type(&dst)[column_count * row_count]) noexcept
+        inline constexpr void assign_identity(scalar_type(&dst)[column_count * row_count], scalar_type diagonal_value) noexcept
         {
             for (auto j = 0u; j < column_count; j++)
             {
@@ -452,7 +462,7 @@ namespace clg
                 }
                 if (i < row_count)
                 {
-                    dst[col + i] = scalar_type(1);
+                    dst[col + i] = diagonal_value;
                     i++;
                 }
                 for (; i < row_count; i++)

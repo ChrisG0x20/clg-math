@@ -80,6 +80,9 @@ namespace clg { namespace impl
             clg::vec::assign(_scalars, original._scalars);
         }
 
+        /// <summary>
+        /// Single scalar parameter used to initialize all components of the constructed vector to that scalar’s value.
+        /// </summary>
         explicit constexpr vec(const scalar_type value)
         {
             clg::vec::assign(_scalars, value);
@@ -94,6 +97,11 @@ namespace clg { namespace impl
         {
             clg::vec::assign(_scalars, scalars, count);
         }
+
+        // TODO: If a vector is constructed from multiple scalars, one or more vectors, or one or more matrices, or a
+        // mixtureof these, the vector's components will be constructed in order from the components of the arguments.
+        // The arguments will be consumed left to right, and each argument will have all its components consumed, in
+        // order, before any components from the next argument are consumed.
 
         constexpr vec& operator =(const vec& rhs)
         {
