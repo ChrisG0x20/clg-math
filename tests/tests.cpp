@@ -140,13 +140,18 @@ int main()
     v3c /= 2.0f; //vec& operator /=(const scalar_type rhs)
 
     //vec3i v4a = static_cast<vec3i>(cast_scalars<int>(v3)); // should fail
-    vec2i v4 = static_cast<vec2i>(cast_scalars<int_fast32_t>(v3));
-    //v4 = cast<vec2i>(v3); // should fail
+    //vec2i v4 = static_cast<vec2i>(cast_scalars<int_fast32_t>(v3));
+    vec2i v4(v3);
+    cout << v4 << '\n';
 
     vec3i v5(1, 2, 3);
-    v4 = cast_dimensions<2>(v5);
-    v5 = cast_dimensions<3>(v4);
+    //v4 = cast_dimensions<2>(v5);
+    //v5 = cast_dimensions<3>(v4);
+    v4 = vec2i(v5);
+    v5 = vec3i(v4);
+    vec4i v7(vec3(1.2f, 3.4f, 7.3f));
     //auto v6t = cast_dimensions<vec3>(v4); // should fail
+    cout << v4 << ' ' << v5 << ' ' << v7 << '\n';
 
     v3a.swap(v3b);  //void swap(vec& rhs)
 
@@ -167,12 +172,12 @@ int main()
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
 
-    rect r1;
+    rect r1(3.5f, 54.2f, 2.3f, 6.9f);
     cout << "rect: " << r1 << '\n';
 
     rect r2(r1); //rect(const rect& original) : _location(original._location), _size(original._size) { }
-    //recti r3(r1); // should fail
-    recti r3 = cast_scalars<int>(r1); // Dst cast_scalars(const impl::rect<SrcT, SrcU, SrcV>& value)
+    recti r3(r1); // constructor casts scalars
+    cout << "rect: " << r3 << '\n';
 
     rect r4(10.0f, 10.0f); //explicit rect(const scalar_type width, const scalar_type height) : _size(width, height) { }
     rect r5(5.0f, 5.0f, 10.0f, 10.0f); //explicit rect(const scalar_type x, const scalar_type y, const scalar_type width, const scalar_type height) : _location(x, y), _size(width, height) { }
@@ -219,6 +224,21 @@ int main()
     cout << b2 << ' ';
     b2 = r7.overlaps(r8); //bool overlaps(const rect& rectangle) const
     cout << b2 << '\n';
+
+
+    impl::vec<float, 4> v4va(1.5f, vec2(2.0f, 3.0f), 4.0f);
+    impl::vec<float, 4> v4vb(vec2(2.0f, 3.0f), 1, 4);
+    impl::vec<float, 4> v4vd(1, 4, vec2(2.0f, 3.0f));
+    impl::vec<float, 4> v4bc(1, 2, 3, 4.0f);
+    cout << v4va << '\n';
+    cout << v4vb << '\n';
+    cout << v4vd << '\n';
+    cout << v4bc << '\n';
+
+    vec4 v4var(4, 3, 2, 1);
+    cout << v4var << '\n';
+    v4var = vec4(4, 3, vec2(5, 6));
+    cout << v4var << '\n';
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -434,13 +454,21 @@ int main()
     cout << normalized_perspective_projection_matrix_gl(to_radians(90.0f), 21.0f / 9.0f, 1.0f, distanceToNearClipPlane) << '\n' << distanceToNearClipPlane << '\n' << '\n';
     cout << perspective_projection_matrix_dx(-1.0f, 1.0f, -1.0f, 1.0f, 0.1f, 1.0f) << '\n' << '\n';
 
-    cout << cast_scalars<int>(mat2({ 1, 2, 3, 4 })) << '\n' << '\n';
-    cout << cast_dimensions<2>(mat3({ 1, 2, 3, 4, 5, 6, 7, 8, 9 })) << '\n' << '\n';
-    cout << cast_dimensions<2, 3>(mat3({ 1, 2, 3, 4, 5, 6, 7, 8, 9 })) << '\n' << '\n';
-    cout << cast_dimensions<3, 2>(mat3({ 1, 2, 3, 4, 5, 6, 7, 8, 9 })) << '\n' << '\n';
-    cout << cast_dimensions<3>(mat2({ 1, 2, 3, 4 })) << '\n' << '\n';
-    cout << cast_dimensions<2, 3>(mat2({ 1, 2, 3, 4 })) << '\n' << '\n';
-    cout << cast_dimensions<3, 2>(mat2({ 1, 2, 3, 4 })) << '\n' << '\n';
+    //cout << cast_scalars<int>(mat2({ 1, 2, 3, 4 })) << '\n' << '\n';
+    cout << impl::mat<int, 2, 2>(mat2({ 1, 2, 3, 4 })) << '\n' << '\n';
+
+    //cout << cast_dimensions<2>(mat3({ 1, 2, 3, 4, 5, 6, 7, 8, 9 })) << '\n' << '\n';
+    //cout << cast_dimensions<2, 3>(mat3({ 1, 2, 3, 4, 5, 6, 7, 8, 9 })) << '\n' << '\n';
+    //cout << cast_dimensions<3, 2>(mat3({ 1, 2, 3, 4, 5, 6, 7, 8, 9 })) << '\n' << '\n';
+    //cout << cast_dimensions<3>(mat2({ 1, 2, 3, 4 })) << '\n' << '\n';
+    //cout << cast_dimensions<2, 3>(mat2({ 1, 2, 3, 4 })) << '\n' << '\n';
+    //cout << cast_dimensions<3, 2>(mat2({ 1, 2, 3, 4 })) << '\n' << '\n';
+    cout << mat2(impl::mat<int, 3, 3>({ 1, 2, 3, 4, 5, 6, 7, 8, 9 })) << '\n' << '\n';
+    cout << mat2x3(mat3({ 1, 2, 3, 4, 5, 6, 7, 8, 9 })) << '\n' << '\n';
+    cout << mat3x2(mat3({ 1, 2, 3, 4, 5, 6, 7, 8, 9 })) << '\n' << '\n';
+    cout << mat3(mat2({ 1, 2, 3, 4 })) << '\n' << '\n';
+    cout << mat2x3(mat2({ 1, 2, 3, 4 })) << '\n' << '\n';
+    cout << mat3x2(mat2({ 1, 2, 3, 4 })) << '\n' << '\n';
 
     cout << cast_column_matrix(vec4(1, 2, 3, 4)) << '\n' << '\n';
     cout << cast_row_matrix(vec4(1, 2, 3, 4)) << '\n' << '\n';
@@ -474,4 +502,9 @@ int main()
     cout << b2st << '\n' << '\n';
     mat3 s2bt(b2st);
     cout << s2bt << '\n' << '\n';
+
+    mat2 colint9(1, 2.0f, 3.0f, 4);
+    cout << colint9 << '\n' << '\n';
+    mat2 colint10(1.0f, 2, 3.0f, 4.0f);
+    cout << colint10 << '\n' << '\n';
 }

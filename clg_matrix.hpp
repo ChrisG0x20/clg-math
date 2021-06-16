@@ -87,12 +87,21 @@ namespace clg { namespace impl
 
         constexpr mat()
         {
-            clg::mat::assign_identity<column_count, row_count>(_scalars, 1.0f);
+            clg::mat::assign_diagonal<column_count, row_count>(_scalars, 1.0f);
         }
 
         constexpr mat(const mat& original)
         {
             clg::vec::assign(_scalars, original._scalars);
+        }
+
+        /// <summary>
+        /// Copy constructor that will static_cast<scalar_type>() each of the original matrix elements to scalar_type
+        /// </summary>
+        template<typename src_scalar_type>
+        explicit constexpr mat(const mat<src_scalar_type, column_count, row_count>& original)
+        {
+            clg::vec::cast_scalars(original.data(), _scalars);
         }
 
         explicit constexpr mat(const array_type& scalars)
@@ -102,11 +111,21 @@ namespace clg { namespace impl
 
         explicit constexpr mat(const scalar_type* const scalars, const size_t count)
         {
-            if (count < element_count)
+            for (auto j = 0u, k = 0u; j < column_count; j++)
             {
-                clg::mat::assign_identity<column_count, row_count>(_scalars, 1.0f);
+                for (auto i = 0u; i < row_count; i++)
+                {
+                    if (k < count)
+                    {
+                        _scalars[k] = scalars[k];
+                        k++;
+                    }
+                    else
+                    {
+                        _scalars[k++] = j == i ? static_cast<scalar_type>(1.0) : static_cast<scalar_type>(0.0);
+                    }
+                }
             }
-            clg::vec::partial_assign(_scalars, scalars, count);
         }
 
         /// <summary>
@@ -115,7 +134,7 @@ namespace clg { namespace impl
         /// </summary>
         explicit constexpr mat(const scalar_type diagonal_value)
         {
-            clg::mat::assign_identity<column_count, row_count>(_scalars, diagonal_value);
+            clg::mat::assign_diagonal<column_count, row_count>(_scalars, diagonal_value);
         }
 
         /// <summary>
@@ -125,9 +144,9 @@ namespace clg { namespace impl
         /// error to provide extra arguments beyond this last used argument.
         /// </summary>
         template<typename... Args>
-        explicit constexpr mat(const scalar_type first, const Args&... args)
+        explicit constexpr mat(const scalar_type first, const Args&&... args)
         {
-            mixture_constructor_unpack<0>(first, args...);
+            mixture_constructor_unpack<0>(first, std::forward<const Args>(args)...);
         }
 
         /// <summary>
@@ -137,9 +156,9 @@ namespace clg { namespace impl
         /// error to provide extra arguments beyond this last used argument.
         /// </summary>
         template<unsigned int dimension_count, typename... Args>
-        explicit constexpr mat(const impl::vec<scalar_type, dimension_count>& first, const Args&... args)
+        explicit constexpr mat(const impl::vec<scalar_type, dimension_count>&& first, const Args&&... args)
         {
-            mixture_constructor_unpack<0>(first, args...);
+            mixture_constructor_unpack<0>(std::forward<decltype(first)>(first), std::forward<const Args>(args)...);
         }
 
         /// <summary>
@@ -148,15 +167,48 @@ namespace clg { namespace impl
         /// components will be initialized to the identity matrix.  If a matrix argument is given to a matrix
         /// constructor, it is a compile-time error to have any other arguments.
         /// </summary>
-        template<unsigned int src_column_count, unsigned int src_row_count>
-        explicit constexpr mat(const mat<scalar_type, src_column_count, src_row_count>& original)
+        template<typename src_scalar_type, unsigned int src_column_count, unsigned int src_row_count>
+        explicit constexpr mat(const mat<src_scalar_type, src_column_count, src_row_count>& original)
         {
-            clg::mat::assign_identity<column_count, row_count>(_scalars, 1.0f);
-            for (auto j = 0u; j < std::min(column_count, src_column_count); j++)
+            for (auto j = 0u, k = 0u; j < column_count; j++)
             {
-                for (auto i = 0u; i < std::min(row_count, src_row_count); i++)
+                if (j < src_column_count)
                 {
-                    _scalars[row_count * j + i] = original(j, i);
+                    auto i = 0u;
+                    for (; i < std::min(src_row_count, row_count); i++)
+                    {
+                        _scalars[k++] = static_cast<scalar_type>(original(j, i));
+                    }
+                    for (; i < std::min(j, row_count); i++)
+                    {
+                        _scalars[k++] = static_cast<scalar_type>(0.0);
+                    }
+                    if (i == j && j < row_count)
+                    {
+                        _scalars[k++] = static_cast<scalar_type>(1.0);
+                        i++;
+                    }
+                    for (; i < row_count; i++)
+                    {
+                        _scalars[k++] = static_cast<scalar_type>(0.0);
+                    }
+                }
+                else
+                {
+                    auto i = 0u;
+                    for (; i < std::min(j, row_count); i++)
+                    {
+                        _scalars[k++] = static_cast<scalar_type>(0.0);
+                    }
+                    if (j < row_count)
+                    {
+                        _scalars[k++] = static_cast<scalar_type>(1.0);
+                        i++;
+                    }
+                    for (; i < row_count; i++)
+                    {
+                        _scalars[k++] = static_cast<scalar_type>(0.0);
+                    }
                 }
             }
         }
@@ -172,7 +224,7 @@ namespace clg { namespace impl
 
         constexpr mat& operator =(const scalar_type rhs)
         {
-            clg::vec::assign(_scalars, rhs);
+            clg::mat::assign_diagonal<column_count, row_count>(_scalars, rhs);
             return *this;
         }
 
@@ -517,7 +569,7 @@ namespace clg { namespace impl
         }
 
         template<unsigned int next_index, unsigned int dimension_count>
-        constexpr void mixture_constructor_unpack(const impl::vec<scalar_type, dimension_count>& last_arg)
+        constexpr void mixture_constructor_unpack(const impl::vec<scalar_type, dimension_count>&& last_arg)
         {
             constexpr auto provided_element_count = next_index + dimension_count;
             static_assert(provided_element_count <= element_count, "attempting to construct a matrix from too many elements");
@@ -525,18 +577,34 @@ namespace clg { namespace impl
             clg::vec::assign(reinterpret_cast<scalar_type(&)[dimension_count]>(_scalars[next_index]), last_arg.data());
         }
 
+        template<unsigned int next_index, typename T, std::enable_if_t<std::is_arithmetic_v<T>, bool> = true>
+        constexpr void mixture_constructor_unpack(const T last_arg)
+        {
+            constexpr auto provided_element_count = next_index + 1u;
+            static_assert(provided_element_count <= element_count, "attempting to construct a matrix from too many elements");
+            static_assert(provided_element_count >= element_count, "attempting to construct a matrix from too few elements");
+            _scalars[next_index] = static_cast<scalar_type>(last_arg);
+        }
+
         template<unsigned int next_index, typename... Args>
-        constexpr void mixture_constructor_unpack(const scalar_type next_arg, const Args&... args)
+        constexpr void mixture_constructor_unpack(const scalar_type next_arg, const Args&&... args)
         {
             _scalars[next_index] = next_arg;
-            mixture_constructor_unpack<next_index + 1u>(args...);
+            mixture_constructor_unpack<next_index + 1u>(std::forward<const Args>(args)...);
         }
 
         template<unsigned int next_index, unsigned int dimension_count, typename... Args>
-        constexpr void mixture_constructor_unpack(const impl::vec<scalar_type, dimension_count>& next_arg, const Args&... args)
+        constexpr void mixture_constructor_unpack(const impl::vec<scalar_type, dimension_count>&& next_arg, const Args&&... args)
         {
             clg::vec::assign(reinterpret_cast<scalar_type(&)[dimension_count]>(_scalars[next_index]), next_arg.data());
-            mixture_constructor_unpack<next_index + dimension_count>(args...);
+            mixture_constructor_unpack<next_index + dimension_count>(std::forward<const Args>(args)...);
+        }
+
+        template<unsigned int next_index, typename T, std::enable_if_t<std::is_arithmetic_v<T>, bool> = true, typename... Args>
+        constexpr void mixture_constructor_unpack(const T next_arg, const Args&&... args)
+        {
+            _scalars[next_index] = static_cast<scalar_type>(next_arg);
+            mixture_constructor_unpack<next_index + 1u>(std::forward<const Args>(args)...);
         }
 
         scalar_type _scalars[column_count * row_count];
@@ -949,31 +1017,6 @@ namespace clg { namespace impl
         result(3, 2) = -((far * near) / (far - near));
         result(2, 3) = 1.0f;
         result(3, 3) = 0.0f;
-        return result;
-    }
-
-    // Creates a new matrix by static-casting all elements of the original.
-    template<typename dst_scalar_type, unsigned int column_count, unsigned int row_count, typename src_scalar_type>
-    inline constexpr impl::mat<dst_scalar_type, column_count, row_count> cast_scalars(const impl::mat<src_scalar_type, column_count, row_count>& original)
-    {
-        dst_scalar_type result[row_count * column_count];
-        vec::cast_scalars(original.data(), result);
-        return impl::mat<dst_scalar_type, column_count, row_count>(result);
-    }
-
-    // Changes the dimensions of a matrix.
-    template<unsigned int column_count, unsigned int row_count = column_count, typename scalar_type, unsigned int src_column_count, unsigned int src_row_count>
-    inline constexpr impl::mat<scalar_type, column_count, row_count> cast_dimensions(const impl::mat<scalar_type, src_column_count, src_row_count>& original)
-    {
-        using dst_mat_type = impl::mat<scalar_type, column_count, row_count>;
-        dst_mat_type result;
-        for (auto j = 0u; j < std::min(src_column_count, column_count); j++)
-        {
-            for (auto i = 0u; i < std::min(src_row_count, row_count); i++)
-            {
-                result(j, i) = original(j, i);
-            }
-        }
         return result;
     }
 

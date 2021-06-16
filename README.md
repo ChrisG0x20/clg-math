@@ -43,10 +43,6 @@ This library is broken into three header files. Almost everything in the `clg::`
         - `clg::impl::vec2<T>` for 2D vectors
         - `clg::impl::vec3<T>` and `clg::vec4<T>` for 3D and homogenous cooridinates
     - common typedefs: `rgb, rgba, point, pointi, sizev, sizevi, vec2, vec2i, vec2ui`, etc...
-    - `clg::cast_scalars<T>(impl::vec<U,V>)` copies a vector using `static_cast<T>()` on each vector component
-        - ex. `auto v2 = cast_scalars<float>(vec2i(1, 2)); // v2's type will be clg::impl::vec<float, 2>`
-    - `clg::cast_dimensions<D>(impl::vec<U,V>)` copies a vector producing a new vector of a different size
-        - ex. `auto v3 = cast_dimensions<3>(vec2(1.0f, 2.0f)); // v3's type will be clg::impl::vec<float, 3>`
     - `std::swap()` support
     - `std::ostream` overloads for quickly writing vector contents to a C++ stream
     - many common vector operations...
@@ -64,7 +60,6 @@ This library is broken into three header files. Almost everything in the `clg::`
     - various accessors for bounds checking
     - methods to check for `rect` overlap or containment
     - common typedefs: `rect, recti, raster_rect, raster_rectui`, and `raster_rectf`
-    - `clg::cast_scalars<T>(impl::rect<>)`, works the same as the vector version
     - a couple utility functions for interoperating with GUI rects Win32 `RECT` and Cocoa `CGRect`
     - `std::swap()` support
     - `std::ostream` overloads for quickly writing contents to a C++ stream
@@ -87,8 +82,6 @@ This library is broken into three header files. Almost everything in the `clg::`
         - `orthographic_projectio_nmatrix_gl(left, right, bottom, top, near, far), orthographic_projection_matrix_dx()`
         - `perspective_projection_matrix_gl(left, right, bottom, top, near, far),  perspective_projection_matrix_dx()`
         - `perspective_projection_matrix_gl(vertical_fov, aspect_ratio, near, far)`
-    - `clg::cast_scalars<T>(impl::mat<>)`, works the same as the vector version
-    - `clg::cast_dimensions<C,R>(impl::mat<>)`, works similarly to the vector version
     - `clg::cast_column_matrix(impl::vec<>)` casts a vector to a column matrix type
     - `clg::cast_row_matrix(impl::vec<>)` casts a vector to a row matrix type
     - `std::swap()` support

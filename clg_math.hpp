@@ -155,16 +155,6 @@ namespace clg
             }
         }
 
-        // partial assignment of vectors with different dimension, truncates a larger src vector, and doesn't pad a larger destination
-        template<typename scalar_type, unsigned int dimension_count>
-        inline constexpr void partial_assign(scalar_type(&dst)[dimension_count], const scalar_type* const src, const size_t count) noexcept
-        {
-            for (auto i = 0u; i < std::min(count, static_cast<size_t>(dimension_count)); i++)
-            {
-                dst[i] = src[i];
-            }
-        }
-
         // assign count elements of a scalar array the elements of the destination vector
         // where count < dimension_count, fill remaining elements with zeros
         // where count > dimension_count, src is truncated to fit in dst
@@ -430,44 +420,43 @@ namespace clg
         // Copies a vector of one length to a vector of a differnt length. If the
         // original vector is bigger the result is a truncated vector. If the target
         // vector is bigger the additional elements are intitalized to zero.
-        template<typename scalar_type, unsigned int input_count, unsigned int output_count>
-        inline constexpr void cast_dimensions(const scalar_type(&input_vec)[input_count], scalar_type(&output_vec)[output_count])
+        template<typename src_scalar_type, unsigned int src_count, typename dst_scalar_type, unsigned int dst_count>
+        inline constexpr void cast_dimensions(const src_scalar_type(&src_vec)[src_count], dst_scalar_type(&dst_vec)[dst_count])
         {
             auto i = 0u;
-            for (; i < std::min(input_count, output_count); i++)
+            for (; i < std::min(src_count, dst_count); i++)
             {
-                output_vec[i] = input_vec[i];
+                dst_vec[i] = static_cast<dst_scalar_type>(src_vec[i]);
             }
 
-            while (i < output_count)
+            while (i < dst_count)
             {
-                output_vec[i++] = scalar_type(0);
+                dst_vec[i++] = static_cast<dst_scalar_type>(0.0);
             }
         }
 
     } // namespace vec
     namespace mat
     {
-        // assign the identity matrix to a column-major matrix
+        // assign a scalar value to the diagonal of a column-major matrix; everything else is zeros
         template<unsigned int column_count, unsigned int row_count, typename scalar_type>
-        inline constexpr void assign_identity(scalar_type(&dst)[column_count * row_count], scalar_type diagonal_value) noexcept
+        inline constexpr void assign_diagonal(scalar_type(&dst)[column_count * row_count], scalar_type value) noexcept
         {
-            for (auto j = 0u; j < column_count; j++)
+            for (auto j = 0u, k = 0u; j < column_count; j++)
             {
-                const auto col = row_count * j;
                 auto i = 0u;
                 for (; i < std::min(j, row_count); i++)
                 {
-                    dst[col + i] = scalar_type(0);
+                    dst[k++] = static_cast<scalar_type>(0.0);
                 }
-                if (i < row_count)
+                if (j < row_count)
                 {
-                    dst[col + i] = diagonal_value;
+                    dst[k++] = value;
                     i++;
                 }
                 for (; i < row_count; i++)
                 {
-                    dst[col + i] = scalar_type(0);
+                    dst[k++] = static_cast<scalar_type>(0.0);
                 }
             }
         }

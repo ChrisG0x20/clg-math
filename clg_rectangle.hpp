@@ -61,6 +61,11 @@ namespace impl
             : _location(location)
             , _size(size) { }
 
+        template<typename src_scalar_type>
+        explicit constexpr rect(const impl::rect<src_scalar_type, y_axes_policy, bounds_check_policy>& original)
+            : _location(original.location())
+            , _size(original.size()) { }
+
         constexpr rect& operator =(const rect& rhs)
         {
             if (&rhs == this)
@@ -347,18 +352,6 @@ namespace impl
     using raster_rectui = impl::rect<uint_fast32_t, InvertedYAxis, RightOpenIntervals>;
     using raster_rectf  = impl::rect<float, InvertedYAxis, RightOpenIntervals>;
 
-
-    // static_cast<> of the value rect<> type to the return type Dst
-    template<typename scalar_type, typename src_scalar_type, typename y_axes_policy, typename bounds_check_policy>
-    inline constexpr impl::rect<scalar_type, y_axes_policy, bounds_check_policy> cast_scalars(const impl::rect<src_scalar_type, y_axes_policy, bounds_check_policy>& value)
-    {
-        using dst_rect_type = impl::rect<scalar_type, y_axes_policy, bounds_check_policy>;
-        dst_rect_type result(
-            static_cast<dst_rect_type::point_type>(cast_scalars<scalar_type>(value.location())),
-            static_cast<dst_rect_type::size_type>(cast_scalars<scalar_type>(value.size()))
-        );
-        return result;
-    }
 
 #ifdef _WINDEF_
     template<typename ScalarT>

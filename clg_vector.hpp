@@ -23,6 +23,12 @@
         explicit constexpr derivedName(const scalar_type value) : base_vec(value) { }\
         explicit constexpr derivedName(const typename base_vec::array_type& scalars) : base_vec(scalars) { }\
         explicit constexpr derivedName(const scalar_type* const scalars, const unsigned int count) : base_vec(scalars, count) { }\
+        template<typename... Args> explicit constexpr derivedName(const scalar_type first, const Args&&... args)\
+            : base_vec(first, std::forward<const Args>(args)...) { }\
+        template<unsigned int arg_dimension_count, typename... Args> explicit constexpr derivedName(const vec<scalar_type, arg_dimension_count>&& first, const Args&&... args)\
+            : base_vec(std::forward<decltype(first)>(first), std::forward<const Args>(args)...) { }\
+        template<typename src_scalar_type, unsigned int src_dimension_count> explicit constexpr derivedName(const vec<src_scalar_type, src_dimension_count>& original)\
+            : base_vec(original) { }\
 \
         constexpr derivedName& operator =(const derivedName& rhs) { return static_cast<derivedName&>(this->base_vec::operator =(rhs)); }\
         constexpr derivedName& operator =(const base_vec& rhs) { return static_cast<derivedName&>(this->base_vec::operator =(rhs)); }\
@@ -98,10 +104,42 @@ namespace clg { namespace impl
             clg::vec::assign(_scalars, scalars, count);
         }
 
-        // TODO: If a vector is constructed from multiple scalars, one or more vectors, or one or more matrices, or a
-        // mixtureof these, the vector's components will be constructed in order from the components of the arguments.
-        // The arguments will be consumed left to right, and each argument will have all its components consumed, in
-        // order, before any components from the next argument are consumed.
+        /// <summary>
+        /// Vector constructed from multiple scalars, one or more vectors, or a mixture of these. The vector's
+        /// components will be constructed in order from the components of the arguments. The arguments will be consumed
+        /// left to right, and each argument will have all its components consumed, in order, before any components from
+        /// the next argument are consumed.
+        /// </summary>
+        template<typename... Args>
+        explicit constexpr vec(const scalar_type first, const Args&&... args)
+        {
+            mixture_constructor_unpack<0>(first, std::forward<const Args>(args)...);
+        }
+
+        /// <summary>
+        /// Vector constructed from multiple scalars, one or more vectors, or a mixture of these. The vector's
+        /// components will be constructed in order from the components of the arguments. The arguments will be consumed
+        /// left to right, and each argument will have all its components consumed, in order, before any components from
+        /// the next argument are consumed.
+        /// </summary>
+        template<unsigned int arg_dimension_count, typename... Args>
+        explicit constexpr vec(const vec<scalar_type, arg_dimension_count>&& first, const Args&&... args)
+        {
+            mixture_constructor_unpack<0>(std::forward<decltype(first)>(first), std::forward<const Args>(args)...);
+        }
+
+        /// <summary>
+        /// Creates a new vector of a different dimensionality based on the size of
+        /// the target template.  If the original vector is bigger the result is a
+        /// truncated vector.  If the target vector is bigger the additional elements
+        /// are intitalized to zero. Will also static_cast<scalar_type>() each of the
+        /// source elements to the new vector.
+        /// </summary>
+        template<typename src_scalar_type, unsigned int src_dimension_count>
+        explicit constexpr vec(const vec<src_scalar_type, src_dimension_count>& original)
+        {
+            clg::vec::cast_dimensions(original.data(), _scalars);
+        }
 
         constexpr vec& operator =(const vec& rhs)
         {
@@ -351,6 +389,54 @@ namespace clg { namespace impl
         }
 
     private:
+        template<unsigned int next_index>
+        constexpr void mixture_constructor_unpack(const scalar_type last_arg)
+        {
+            constexpr auto provided_element_count = next_index + 1u;
+            static_assert(provided_element_count <= dimension_count, "attempting to construct a vector from too many elements");
+            static_assert(provided_element_count >= dimension_count, "attempting to construct a vector from too few elements");
+            _scalars[next_index] = last_arg;
+        }
+
+        template<unsigned int next_index, unsigned int arg_dimension_count>
+        constexpr void mixture_constructor_unpack(const vec<scalar_type, arg_dimension_count>&& last_arg)
+        {
+            constexpr auto provided_element_count = next_index + arg_dimension_count;
+            static_assert(provided_element_count <= dimension_count, "attempting to construct a vector from too many elements");
+            static_assert(provided_element_count >= dimension_count, "attempting to construct a vector from too few elements");
+            clg::vec::assign(reinterpret_cast<scalar_type(&)[arg_dimension_count]>(_scalars[next_index]), last_arg.data());
+        }
+
+        template<unsigned int next_index, typename T, std::enable_if_t<std::is_arithmetic_v<T>, bool> = true>
+        constexpr void mixture_constructor_unpack(const T last_arg)
+        {
+            constexpr auto provided_element_count = next_index + 1u;
+            static_assert(provided_element_count <= dimension_count, "attempting to construct a vector from too many elements");
+            static_assert(provided_element_count >= dimension_count, "attempting to construct a vector from too few elements");
+            _scalars[next_index] = static_cast<scalar_type>(last_arg);
+        }
+
+        template<unsigned int next_index, typename... Args>
+        constexpr void mixture_constructor_unpack(const scalar_type next_arg, const Args&&... args)
+        {
+            _scalars[next_index] = next_arg;
+            mixture_constructor_unpack<next_index + 1u>(std::forward<const Args>(args)...);
+        }
+
+        template<unsigned int next_index, unsigned int arg_dimension_count, typename... Args>
+        constexpr void mixture_constructor_unpack(const vec<scalar_type, arg_dimension_count>&& next_arg, const Args&&... args)
+        {
+            clg::vec::assign(reinterpret_cast<scalar_type(&)[arg_dimension_count]>(_scalars[next_index]), next_arg.data());
+            mixture_constructor_unpack<next_index + arg_dimension_count>(std::forward<const Args>(args)...);
+        }
+
+        template<unsigned int next_index, typename T, std::enable_if_t<std::is_arithmetic_v<T>, bool> = true, typename... Args>
+        constexpr void mixture_constructor_unpack(const T next_arg, const Args&&... args)
+        {
+            _scalars[next_index] = static_cast<scalar_type>(next_arg);
+            mixture_constructor_unpack<next_index + 1u>(std::forward<const Args>(args)...);
+        }
+
         scalar_type _scalars[dimension_count];
     };
 
@@ -360,24 +446,6 @@ namespace clg { namespace impl
         typename vec<scalar_type, dimension_count>::array_type result;
         clg::vec::abs(value.data(), result);
         return vec<scalar_type, dimension_count>(result);
-    }
-
-    template<typename dst_scalar_type, unsigned int dst_dimension_count, typename src_scalar_type, unsigned int src_dimension_count>
-    inline constexpr vec<dst_scalar_type, dst_dimension_count> cast_scalars(const vec<src_scalar_type, src_dimension_count>& value)
-    {
-        static_assert(dst_dimension_count == src_dimension_count, "bad cast -- vector dimensions do not match");
-        typename vec<dst_scalar_type, dst_dimension_count>::array_type result;
-        clg::vec::cast_scalars(value.data(), result);
-        return vec<dst_scalar_type, dst_dimension_count>(result);
-    }
-
-    template<typename dst_scalar_type, unsigned int dst_dimension_count, typename src_scalar_type, unsigned int src_dimension_count>
-    inline constexpr vec<dst_scalar_type, dst_dimension_count> cast_dimensions(const vec<src_scalar_type, src_dimension_count>& value)
-    {
-        static_assert(std::is_same<dst_scalar_type, src_scalar_type>::value, "bad cast -- vector scalar types do not match");
-        typename vec<dst_scalar_type, dst_dimension_count>::array_type result;
-        clg::vec::cast_dimensions(value.data(), result);
-        return vec<dst_scalar_type, dst_dimension_count>(result);
     }
 
     template<typename scalar_type, unsigned int dimension_count>
@@ -557,24 +625,6 @@ namespace clg { namespace impl
     inline constexpr vec_type abs(const vec_type& value)
     {
         return static_cast<vec_type>(impl::abs<typename vec_t::scalar_type, vec_t::dimension_count>(value));
-    }
-
-    // Creates a new vector of a different type via a static_cast of each
-    // vector element.
-    template<typename scalar_type, typename src_scalar_type, unsigned int dimension_count>
-    inline constexpr impl::vec<scalar_type, dimension_count> cast_scalars(const impl::vec<src_scalar_type, dimension_count>& value)
-    {
-        return impl::cast_scalars<scalar_type, dimension_count>(value);
-    }
-
-    // Creates a new vector of a different dimensionality based on the size of
-    // the target template.  If the original vector is bigger the result is a
-    // truncated vector.  If the target vector is bigger the additional elements
-    // are intitalized to zero.
-    template<unsigned int dimension_count, typename scalar_type, unsigned int src_dimension_count>
-    inline constexpr impl::vec<scalar_type, dimension_count> cast_dimensions(const impl::vec<scalar_type, src_dimension_count>& value)
-    {
-        return impl::cast_dimensions<scalar_type, dimension_count>(value);
     }
 
     // Gets the surface normal of three counter-clockwise points in space.
