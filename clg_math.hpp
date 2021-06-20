@@ -143,7 +143,7 @@ namespace clg
     //    return (static_cast<float>(rand()) / static_cast<float>(RAND_MAX)) * max;
     //}
 
-    namespace vec
+    namespace vec_util
     {
         // assign the elements of the source vector to the elements of the destination vector
         template<typename scalar_type, unsigned int dimension_count>
@@ -436,7 +436,7 @@ namespace clg
         }
 
     } // namespace vec
-    namespace mat
+    namespace mat_util
     {
         // assign a scalar value to the diagonal of a column-major matrix; everything else is zeros
         template<unsigned int column_count, unsigned int row_count, typename scalar_type>
@@ -488,11 +488,11 @@ namespace clg
             for (auto i = 0u; i < lhs_row_count; i++)
             {
                 scalar_type lhs_row[lhs_column_count];
-                clg::mat::slice_row<lhs_row_count>(lhs_row, lhs, i);
+                clg::mat_util::slice_row<lhs_row_count>(lhs_row, lhs, i);
                 for (auto j = 0u; j < rhs_column_count; j++)
                 {
                     const auto& rhs_col = reinterpret_cast<const scalar_type(&)[rhs_row_count]>(rhs[rhs_row_count * j]);
-                    result[lhs_row_count * j + i] = clg::vec::dot_product(lhs_row, rhs_col);
+                    result[lhs_row_count * j + i] = clg::vec_util::dot_product(lhs_row, rhs_col);
                 }
             }
         }

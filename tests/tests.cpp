@@ -22,18 +22,80 @@ void TakesSize(sizev s)
 
 int main()
 {
+    impl::vec<int, 2> t1;
+    t1[0] = 3;
+    t1[1] = 6;
+    cout << t1.x << ' ' << t1[0] << '\n';
+
+    cout << impl::vec<int, 2>(t1) << '\n';
+    cout << impl::vec<int, 3>(8) << '\n';
+    int a1[2]{ 4, 5 };
+    cout << impl::vec<int, 2>(a1) << '\n';
+    cout << impl::vec<int, 2>(&a1[0], array_count(a1)) << '\n';
+
+    cout << impl::vec<int, 2>(impl::vec<int, 1>(7), 8) << '\n';
+    cout << impl::vec<int, 2>(8, impl::vec<int, 1>(7)) << '\n';
+    cout << impl::vec<int, 2>(vec2i(9, 9)) << '\n';
+    cout << impl::vec<int, 2>(10, 11) << '\n';
+
+    cout << impl::vec<int, 3>(vec3(234.234, 327.12, 827.23)) << '\n';
+    cout << impl::vec<float, 3>(vec3(234, 327, 827)) << '\n';
+    cout << impl::vec<int, 3>(vec2(234.234, 327.12)) << '\n';
+
+    cout << impl::vec<int, 2>(vec3i(12, 13, 14)) << '\n';
+    cout << impl::vec<int, 3>(vec2i(57, 19)) << '\n';
+
+    impl::vec<int, 2> t2(9, 12);
+    t1 = t2;
+    cout << t1 << '\n';
+    impl::vec<unsigned int, 2> t3(15, 18);
+    impl::vec<int, 3> t4(9, 12, 15);
+    impl::rgb<int> c1(1, 2, 3);
+    //t4 = c1; // fails - types are too different
+    t4 = impl::vec<int, 3>(c1); // TODO: <- this should work
+    //t3 = c1; // fails - types are too different
+    //c1 = t3; // fails - types are too different
+    cout << t2 << '\n';
+    t3 = 8;
+    cout << t3 << '\n';
+    t2 = a1;
+    cout << t2 << '\n';
+
+    auto z1 = { 1, 4, 5 };
+    cout << typeid(z1).name() << '\n';
+    impl::vec<int, 2> z2{ 6, 4 };
+    impl::vec<int, 2> z4(6, 4);
+    //impl::vec<int, 2> z3 { 6, 4, 8 }; // fails - too many args
+
+    impl::vec<int, 2> v5(-9);
+    const auto v6 = clg::abs(v5);
+    cout << typeid(v6).name() << v6 << '\n';
+
+    vec2i v7(2, 3);
+    vec2i v8(5, 7);
+    wcout << typeid(v7).name() << v7 << '\n';
+    cout << typeid(v5 - v7).name() << v5 - v7 << '\n';
+    cout << typeid(v7 - v5).name() << v7 - v5 << '\n';
+    cout << typeid(v8 - v7).name() << v8 - v7 << '\n';
+
+    rgb c2(3, 4, 6);
+    rgb c3(1);
+    cout << typeid(c2 - c3).name() << c2 - c3 << '\n';
+
+    //newvec_test();
+
     vec2 p; //vec()
-    vec2 v6;
-    v6 = p = 1.0f; //vec& operator =(const scalar_type rhs)
-    v6 = vec2(p); //vec(const vec & original)
+    vec2 v6o;
+    v6o = p = 1.0f; //vec& operator =(const scalar_type rhs)
+    v6o = vec2(p); //vec(const vec & original)
     const float a[] = { 1.0f, 2.0f };
-    v6 = vec2(a); //explicit vec(const array_type & scalars)
+    v6o = vec2(a); //explicit vec(const array_type & scalars)
     const float a2[] = { 1.0f, 2.0f, 3.0f };
     wcout << a2 << L'\n';
-    v6 = vec2(&a[0], 2); //explicit vec(const scalar_type * const scalars, const unsigned int count)
+    v6o = vec2(&a[0], 2); //explicit vec(const scalar_type * const scalars, const unsigned int count)
 
-    p.x(1.0f);
-    auto x = p.x();
+    p.x = 1.0f;
+    auto x = p.x;
     cout << x << '\n';
 
     //TakesSize(p); // should fail
@@ -43,7 +105,7 @@ int main()
     auto s = static_cast<sizev>(p);
     // const sizev& s2 = p; // conversion fails to compile
     const sizev& s2 = static_cast<sizev>(p);
-    cout << s2.width() << '\n';
+    cout << s2.width << '\n';
     //const sizev s3 = p; // fails to call explicit constructor
     const sizev s3 = sizev(p); // explicit constructor
     wcout << s3 << L'\n';
@@ -65,7 +127,7 @@ int main()
     v1[0] = 8.0f; //scalar_type& operator [](const int index)
 
     vec2i vi1(1, 2);
-    vec2i vi2 = { 1, 2 };
+    vec2i vi2{ 1, 2 };
     const bool equal = vi1 == vi2; //bool operator ==(const vec & rhs) const
     const bool not_equal = vi1 != vi2; //bool operator !=(const vec & rhs) const
     wcout << equal << ' ' << not_equal << L'\n';
@@ -84,16 +146,16 @@ int main()
     cout << cr << '\n';
 
     const auto vils = vi1.length_squared(); //scalar_type LengthSquared() const
-    const float v6ls = v6.length_squared();
-    const float v6l = v6.length(); //scalar_type Length() const
+    const float v6ls = v6o.length_squared();
+    const float v6l = v6o.length(); //scalar_type Length() const
     cout << vils << ' ' << v6ls << ' ' << v6l << '\n';
 
-    const vec2 u1 = v6.unit(); //vec unit() const
-    const vec2 ut = v6.unit();
+    const vec2 u1 = v6o.unit(); //vec unit() const
+    const vec2 ut = v6o.unit();
     cout << u1 << ' ' << ut << '\n';
 
     vec2 u2;
-    u2 = v6.unit();
+    u2 = v6o.unit();
 
     vec2 v2(1.0f, 0.0f);
     vec2 v3 = v2.rotate_clockwise(trig<>::half_pi); //derived_type rotate_clockwise(const scalar_type radians) const
@@ -107,10 +169,10 @@ int main()
     const auto d1 = v2.dot(v3); // scalar_type dot(const vec & rhs) const
     cout << d1 << '\n';
 
-    vec3 v3a = { 1.0f, 0.0f, 0.0f };
-    vec3 v3b = { 0.0f, 1.0f, 0.0f };
-    const vec3 c1 = v3a.cross(v3b); // derived_type cross(const vec& rhs) const
-    cout << c1 << '\n';
+    vec3 v3a{ 1.0f, 0.0f, 0.0f };
+    vec3 v3b{ 0.0f, 1.0f, 0.0f };
+    const vec3 c1o = v3a.cross(v3b); // derived_type cross(const vec& rhs) const
+    cout << c1o << '\n';
 
     pointi pi;
     cout << "point: " << pi << '\n';
@@ -144,19 +206,22 @@ int main()
     vec2i v4(v3);
     cout << v4 << '\n';
 
-    vec3i v5(1, 2, 3);
-    //v4 = cast_dimensions<2>(v5);
-    //v5 = cast_dimensions<3>(v4);
-    v4 = vec2i(v5);
-    v5 = vec3i(v4);
-    vec4i v7(vec3(1.2f, 3.4f, 7.3f));
+    vec3i v5o(1, 2, 3);
+    //v4 = cast_dimensions<2>(v5o);
+    //v5o = cast_dimensions<3>(v4);
+    v4 = vec2i(v5o);
+    v5o = vec3i(v4);
+    vec4i v7o(vec3(1.2f, 3.4f, 7.3f));
     //auto v6t = cast_dimensions<vec3>(v4); // should fail
-    cout << v4 << ' ' << v5 << ' ' << v7 << '\n';
+    cout << v4 << ' ' << v5o << ' ' << v7o << '\n';
 
     v3a.swap(v3b);  //void swap(vec& rhs)
 
     const vec3 av3 = abs(v3a); // T abs(const T& value)
+    cout << av3 << '\n';
     const auto av4 = abs(impl::vec<float, 4>({ 1, 3, 5, 6 }));
+    cout << av4 << '\n';
+
     //const auto av5 = abs(impl::mat<float, 2, 2>({ 1, 3, 5, 6 }));
     const float fff = abs(3.95f);
 
@@ -224,7 +289,6 @@ int main()
     cout << b2 << ' ';
     b2 = r7.overlaps(r8); //bool overlaps(const rect& rectangle) const
     cout << b2 << '\n';
-
 
     impl::vec<float, 4> v4va(1.5f, vec2(2.0f, 3.0f), 4.0f);
     impl::vec<float, 4> v4vb(vec2(2.0f, 3.0f), 1, 4);

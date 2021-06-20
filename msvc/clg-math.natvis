@@ -1,0 +1,74 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+
+  <Type Name="clg::impl::rgb&lt;*&gt;">
+    <DisplayString>(r={_scalars[0]}, g={_scalars[1]}, b={_scalars[2]})</DisplayString>
+    <Expand>
+      <Item Name="red">_scalars[0]</Item>
+      <Item Name="green">_scalars[1]</Item>
+      <Item Name="blue">_scalars[2]</Item>
+    </Expand>
+  </Type>
+
+  <Type Name="clg::impl::rgba&lt;*&gt;">
+    <DisplayString>(r={_scalars[0]}, g={_scalars[1]}, b={_scalars[2]}, a={_scalars[3]})</DisplayString>
+    <Expand>
+      <Item Name="red">_scalars[0]</Item>
+      <Item Name="green">_scalars[1]</Item>
+      <Item Name="blue">_scalars[2]</Item>
+      <Item Name="alpha">_scalars[3]</Item>
+    </Expand>
+  </Type>
+
+  <Type Name="clg::impl::point&lt;*&gt;">
+    <DisplayString>(x={_scalars[0]}, y={_scalars[1]})</DisplayString>
+    <Expand>
+      <Item Name="x">_scalars[0]</Item>
+      <Item Name="y">_scalars[1]</Item>
+    </Expand>
+  </Type>
+
+  <Type Name="clg::impl::size&lt;*&gt;">
+    <DisplayString>(width={_scalars[0]}, height={_scalars[1]})</DisplayString>
+    <Expand>
+      <Item Name="width">_scalars[0]</Item>
+      <Item Name="height">_scalars[1]</Item>
+    </Expand>
+  </Type>
+
+  <Type Name="clg::impl::vec&lt;*&gt;">
+    <DisplayString Condition="1 == dimension_count">(x={_scalars[0]})</DisplayString>
+    <DisplayString Condition="2 == dimension_count">(x={_scalars[0]}, y={_scalars[1]})</DisplayString>
+    <DisplayString Condition="3 == dimension_count">(x={_scalars[0]}, y={_scalars[1]}, z={_scalars[2]})</DisplayString>
+    <DisplayString Condition="4 == dimension_count">(x={_scalars[0]}, y={_scalars[1]}, z={_scalars[2]}, w={_scalars[3]})</DisplayString>
+    <DisplayString Condition="5 == dimension_count">({_scalars[0]}, {_scalars[1]}, {_scalars[2]}, {_scalars[3]}, {_scalars[4]})</DisplayString>
+    <Expand>
+      <ArrayItems>
+        <Size>dimension_count</Size>
+        <ValuePointer>_scalars</ValuePointer>
+      </ArrayItems>
+    </Expand>
+  </Type>
+
+  <Type Name="clg::impl::rect&lt;*&gt;">
+    <DisplayString>[{_location}, {_size}]</DisplayString>
+    <Expand>
+      <Item Name="location">_location</Item>
+      <Item Name="size">_size</Item>
+    </Expand>
+  </Type>
+
+  <Type Name="clg::impl::mat&lt;*&gt;">
+    <DisplayString>matrix[ {column_count} x {row_count} ] (colums, rows)</DisplayString>
+    <Expand>
+      <ArrayItems>
+        <Direction>Backward</Direction>
+        <Rank>2</Rank>
+        <Size>column_count</Size>
+        <ValuePointer>_scalars</ValuePointer>
+      </ArrayItems>
+    </Expand>
+  </Type>
+
+</AutoVisualizer>

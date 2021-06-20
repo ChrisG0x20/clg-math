@@ -101,53 +101,53 @@ namespace impl
 
         constexpr scalar_type x() const
         {
-            return _location.x();
+            return _location.x;
         }
 
         constexpr void x(const scalar_type value)
         {
-            _location.x(value);
+            _location.x = value;
         }
 
         constexpr scalar_type y() const
         {
-            return _location.y();
+            return _location.y;
         }
 
         constexpr void y(const scalar_type value)
         {
-            _location.y(value);
+            _location.y = value;
         }
 
         constexpr scalar_type width() const
         {
-            return _size.width();
+            return _size.width;
         }
 
         constexpr void width(const scalar_type value)
         {
-            _size.width(value);
+            _size.width = value;
         }
 
         constexpr scalar_type height() const
         {
-            return _size.height();
+            return _size.height;
         }
 
         constexpr void height(const scalar_type value)
         {
-            _size.height(value);
+            _size.height = value;
         }
 
         constexpr scalar_type left() const
         {
-            return _location.x();
+            return _location.x;
         }
 
         constexpr void left(const scalar_type value)
         {
-            _size.width(_size.width() + (_location.x() - value));
-            _location.x(value);
+            _size.width = _size.width + (_location.x - value);
+            _location.x = value;
         }
 
         constexpr scalar_type top() const
@@ -162,12 +162,12 @@ namespace impl
 
         constexpr scalar_type right() const
         {
-            return _location.x() + _size.width();
+            return _location.x + _size.width;
         }
 
         constexpr void right(const scalar_type value)
         {
-            _size.width(value - _location.x());
+            _size.width = value - _location.x;
         }
 
         constexpr scalar_type bottom() const
@@ -213,13 +213,13 @@ namespace impl
         template<>
         constexpr scalar_type impl_get_top<StandardYAxis>() const
         {
-            return _location.y() + _size.height();
+            return _location.y + _size.height;
         }
 
         template<>
         constexpr scalar_type impl_get_top<InvertedYAxis>() const
         {
-            return _location.y();
+            return _location.y;
         }
 
         template<typename YAxesPolicy>
@@ -228,14 +228,14 @@ namespace impl
         template<>
         constexpr void impl_set_top<StandardYAxis>(const scalar_type value)
         {
-            _size.height(value - _location.y());
+            _size.height = value - _location.y;
         }
 
         template<>
         constexpr void impl_set_top<InvertedYAxis>(const scalar_type value)
         {
-            _size.height(_size.height() + (_location.y() - value));
-            _location.y(value);
+            _size.height = _size.height + (_location.y - value);
+            _location.y = value;
         }
 
         template<typename YAxesPolicy>
@@ -244,13 +244,13 @@ namespace impl
         template<>
         constexpr scalar_type impl_get_bottom<StandardYAxis>() const
         {
-            return _location.y();
+            return _location.y;
         }
 
         template<>
         constexpr scalar_type impl_get_bottom<InvertedYAxis>() const
         {
-            return _location.y() + _size.height();
+            return _location.y + _size.height;
         }
 
         template<typename YAxesPolicy>
@@ -259,14 +259,14 @@ namespace impl
         template<>
         constexpr void impl_set_bottom<StandardYAxis>(const scalar_type value)
         {
-            _size.height(_size.height() + (_location.y() - value));
-            _location.y(value);
+            _size.height = _size.height + (_location.y - value);
+            _location.y = value;
         }
 
         template<>
         constexpr void impl_set_bottom<InvertedYAxis>(const scalar_type value)
         {
-            _size.height(value - _location.y());
+            _size.height = value - _location.y;
         }
 
         template<typename BoundsCheckPolicy>
@@ -275,12 +275,12 @@ namespace impl
         template<>
         constexpr bool impl_contains<ClosedIntervals>(const point_type& point) const
         {
-            if (point.x() < _location.x() || point.y() < _location.y())
+            if (point.x < _location.x || point.y < _location.y)
             {
                 return false;
             }
 
-            if ( right() < point.x() || top() < point.y() ) // NOTE: Inclusive coordinates.
+            if ( right() < point.x || top() < point.y) // NOTE: Inclusive coordinates.
             {
                 return false;
             }
@@ -291,12 +291,12 @@ namespace impl
         template<>
         constexpr bool impl_contains<RightOpenIntervals>(const point_type& point) const
         {
-            if (point.x() < _location.x() || point.y() < _location.y())
+            if (point.x < _location.x || point.y < _location.y)
             {
                 return false;
             }
 
-            if ( right() <= point.x() || bottom() <= point.y() ) // NOTE: Exclusive coordinates.
+            if ( right() <= point.x || bottom() <= point.y) // NOTE: Exclusive coordinates.
             {
                 return false;
             }
@@ -382,10 +382,10 @@ namespace impl
     inline constexpr CGRect ConvertToCGRect(const impl::rect<ScalarT, InvertedYAxis, RightOpenIntervals>& rectangle)
     {
         CGRect result;
-        result.origin.x     = rectangle.x();
-        result.origin.y     = rectangle.y();
-        result.size.width   = rectangle.width();
-        result.size.height  = rectangle.height();
+        result.origin.x     = rectangle.x;
+        result.origin.y     = rectangle.y;
+        result.size.width   = rectangle.width;
+        result.size.height  = rectangle.height;
         return result;
     }
 
