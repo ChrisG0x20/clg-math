@@ -571,4 +571,16 @@ int main()
     cout << colint9 << '\n' << '\n';
     mat2 colint10(1.0f, 2, 3.0f, 4.0f);
     cout << colint10 << '\n' << '\n';
+
+    cout << interpolate(0, 10, 3) << '\n';
+    cout << interpolate(0, 10, 10) << '\n';
+    cout << interpolate(0, 10, 0) << '\n';
+
+    cout << interpolate(0, 10, 3) << '\n';
+    cout << interpolate(0, 10, 9) << '\n';
+    cout << interpolate(0, 5, 3) << '\n';
+    cout << interpolate(0, 5, 5) << '\n';
+
+    cout << interpolate<interp::smoothstep>(0, 10, 5) << '\n';
+    cout << interpolate(interp::weighted_average(5.f), 0, 10, 5) << '\n';
 }

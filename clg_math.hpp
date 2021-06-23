@@ -1,4 +1,4 @@
-//
+﻿//
 // Copyright (c) 2021 Christopher Gassib
 // Distributed under the Boost Software License, Version 1.0.
 // (See accompanying file LICENSE or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -142,6 +142,201 @@ namespace clg
     //{
     //    return (static_cast<float>(rand()) / static_cast<float>(RAND_MAX)) * max;
     //}
+
+    /// <summary>
+    /// interpolation function objects
+    /// </summary>
+    namespace interp
+    {
+        struct linear
+        {
+            constexpr float operator ()(const float x) const
+            {
+                return x;
+            }
+        };
+
+        struct smoothstep
+        {
+            constexpr float operator ()(const float x) const
+            {
+                return x * x * (3.0f - 2.0f * x);
+            }
+        };
+
+        struct smoothstep2
+        {
+            constexpr float operator ()(const float x) const
+            {
+                const smoothstep f;
+                return f(f(x));
+            }
+        };
+
+        struct smoothstep3
+        {
+            constexpr float operator ()(const float x) const
+            {
+                const smoothstep f;
+                return f(f(f(x)));
+            }
+        };
+
+        // Slowly accelerates.
+        struct quadratic
+        {
+            constexpr float operator ()(const float x) const
+            {
+                return x * x;
+            }
+        };
+
+        // Slowly decelerates.
+        struct inverse_quadratic
+        {
+            constexpr float operator ()(const float x) const
+            {
+                const auto invX = 1.0f - x;
+                return 1.0f - invX * invX;
+            }
+        };
+
+        // Slowly accelerates.
+        struct cubic
+        {
+            constexpr float operator ()(const float x) const
+            {
+                return x * x * x;
+            }
+        };
+
+        // Slowly decelerates.
+        struct inverse_cubic
+        {
+            constexpr float operator ()(const float x) const
+            {
+                const auto invX = 1.0f - x;
+                return 1.0f - invX * invX * invX;
+            }
+        };
+
+        struct sin
+        {
+            float operator ()(const float x) const
+            {
+                return std::sin(x * clg::trig<>::pi / 2.0f);
+            }
+        };
+
+        struct inverse_sin
+        {
+            float operator ()(const float x) const
+            {
+                const auto invX = 1.0f - x;
+                return 1.0f - std::sin(invX * clg::trig<>::pi / 2.0f);
+            }
+        };
+
+        // Low-pass filter.
+        struct weighted_average
+        {
+            weighted_average(float slowdownFactor)
+                : _slowdownFactor(slowdownFactor) { }
+            weighted_average(const weighted_average&) = default;
+            weighted_average& operator =(const weighted_average&) = default;
+
+            constexpr float operator ()(const float x) const
+            {
+                return ((x * (_slowdownFactor - 1.0f)) + 1.0f) / _slowdownFactor;
+            }
+
+            float _slowdownFactor;
+        };
+    } // namespace interp
+
+    /// <summary>
+    /// Performs interpolation between 0 and 1 for any x between start and end, where start < end.
+    /// WARNING: The results are undefined if x is outside the bounds of start and end.
+    /// </summary>
+    /// <typeparam name="interpolate_func">The interpolation function to use.</typeparam>
+    /// <param name="interp">The interpolation function to use.</param>
+    /// <param name="start">The starting edge of the function.</param>
+    /// <param name="end">The ending edge of the function.</param>
+    /// <param name="x">The source value for interpolation.</param>
+    /// <returns>An interpolated value in the range [0.0f, 1.0f].</returns>
+    template<typename interpolate_func = interp::linear>
+    inline constexpr float interpolate(interpolate_func interp, const float start, const float end, const float x)
+    {
+        if (start == end)
+        {
+            return 1.0f;
+        }
+
+        const auto t = clg::clamp((x - start) / (end - start));
+        return interp(t);
+    }
+
+    /// <summary>
+    /// Performs interpolation between 0 and 1 for any x between start and end, where start < end.
+    /// WARNING: The results are undefined if x is outside the bounds of start and end.
+    /// </summary>
+    /// <typeparam name="interpolate_func">The interpolation function to use.</typeparam>
+    /// <param name="start">The starting edge of the function.</param>
+    /// <param name="end">The ending edge of the function.</param>
+    /// <param name="x">The source value for interpolation.</param>
+    /// <returns>An interpolated value in the range [0.0f, 1.0f].</returns>
+    template<typename interpolate_func = interp::linear>
+    inline constexpr float interpolate(const float start, const float end, const float x)
+    {
+        return interpolate(interpolate_func(), start, end, x);
+    }
+
+    /// <summary>
+    /// When one interpolation function just isn't enough...
+    /// Performs interpolation between 0 and 1 for any x between start and end, where start < end.
+    /// WARNING: The results are undefined if x is outside the bounds of start and end.
+    /// </summary>
+    /// <typeparam name="interpolate_in_func">The interpolation function to use in the first half.</typeparam>
+    /// <typeparam name="interpolate_out_func">The interpolation function to use in the second half.</typeparam>
+    /// <param name="interp_in">The interpolation function to use for the first half of the range.</param>
+    /// <param name="interp_out">The interpolation function to use for the second half of the range.</param>
+    /// <param name="start">The starting edge of the function.</param>
+    /// <param name="end">The ending edge of the function.</param>
+    /// <param name="x">The source value for interpolation.</param>
+    /// <returns>An interpolated value in the range [0.0f, 1.0f].</returns>
+    template<typename interpolate_in_func = interp::linear, typename interpolate_out_func = interp::linear>
+    inline constexpr float interpolate_inout(interpolate_in_func interp_in, interpolate_out_func interp_out, const float start, const float end, const float x)
+    {
+        if (start == end)
+        {
+            return 1.0f;
+        }
+
+        const auto t = clg::clamp((x - start) / (end - start));
+        if (t < 0.5f)
+        {
+            return interp_in(t);
+        }
+
+        return interp_out(t);
+    }
+
+    /// <summary>
+    /// When one interpolation function just isn't enough...
+    /// Performs interpolation between 0 and 1 for any x between start and end, where start < end.
+    /// WARNING: The results are undefined if x is outside the bounds of start and end.
+    /// </summary>
+    /// <typeparam name="interpolate_in_func">The interpolation function to use in the first half.</typeparam>
+    /// <typeparam name="interpolate_out_func">The interpolation function to use in the second half.</typeparam>
+    /// <param name="start">The starting edge of the function.</param>
+    /// <param name="end">The ending edge of the function.</param>
+    /// <param name="x">The source value for interpolation.</param>
+    /// <returns>An interpolated value in the range [0.0f, 1.0f].</returns>
+    template<typename interpolate_in_func = interp::linear, typename interpolate_out_func = interp::linear>
+    inline constexpr float interpolate_inout(const float start, const float end, const float x)
+    {
+        return interpolate_inout(interpolate_in_func(), interpolate_out_func(), start, end, x);
+    }
 
     namespace vec_util
     {
@@ -436,6 +631,7 @@ namespace clg
         }
 
     } // namespace vec
+
     namespace mat_util
     {
         // assign a scalar value to the diagonal of a column-major matrix; everything else is zeros
