@@ -56,11 +56,11 @@ namespace clg
     {
         if (radians >= trig<T>::two_pi)
         {
-            return std::fmod(radians, trig<T>::two_pi);
+            return fmod(radians, trig<T>::two_pi);
         }
         if (radians < 0.0)
         {
-            return trig<T>::two_pi + std::fmod(radians, trig<T>::two_pi);
+            return trig<T>::two_pi + fmod(radians, trig<T>::two_pi);
         }
         return radians;
     }

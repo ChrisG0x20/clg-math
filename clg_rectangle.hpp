@@ -200,6 +200,15 @@ namespace impl
             return impl_overlaps<bounds_check_policy>(rectangle);
         }
 
+        constexpr rect make_union(const rect& rectangle) const
+        {
+            const auto x = std::min(_location.x, rectangle._location.x);
+            const auto y = std::min(_location.y, rectangle._location.y);
+            const auto w = std::max(_location.x + _size.width,  rectangle._location.x + rectangle._size.width ) - x;
+            const auto h = std::max(_location.y + _size.height, rectangle._location.y + rectangle._size.height) - y;
+            return rect(x, y, w, h);
+        }
+
         constexpr void swap(rect& rhs) noexcept
         {
             _location.swap(rhs._location);
@@ -352,34 +361,51 @@ namespace impl
     using raster_rectui = impl::rect<uint_fast32_t, InvertedYAxis, RightOpenIntervals>;
     using raster_rectf  = impl::rect<float, InvertedYAxis, RightOpenIntervals>;
 
-
-#ifdef _WINDEF_
-    template<typename ScalarT>
-    inline constexpr RECT ConvertToWindowsRECT(const impl::rect<ScalarT, InvertedYAxis, RightOpenIntervals>& rectangle)
+    template<typename dst_scalar_type, typename src_scalar_type>
+    inline constexpr impl::rect<dst_scalar_type, InvertedYAxis, RightOpenIntervals> to_raster_rect(const impl::rect<src_scalar_type>& rectangle, const int_fast32_t client_height)
     {
-        RECT result;
-        result.left     = rectangle.left();
-        result.top      = rectangle.top();
-        result.right    = rectangle.right();
-        result.bottom   = rectangle.bottom();
+        const impl::rect<dst_scalar_type, InvertedYAxis, RightOpenIntervals> result(rectangle.x(), client_height - rectangle.top(), rectangle.width(), rectangle.height());
         return result;
     }
 
-    template<typename ScalarT>
-    inline constexpr impl::rect<ScalarT, InvertedYAxis, RightOpenIntervals> ConvertToRectangle(const RECT& rect)
+    template<typename dst_scalar_type, typename src_scalar_type>
+    inline constexpr impl::rect<dst_scalar_type> from_raster_rect(const impl::rect<src_scalar_type, InvertedYAxis, RightOpenIntervals>& rectangle, const int_fast32_t client_height)
     {
-        return impl::rect<ScalarT, InvertedYAxis, RightOpenIntervals>(
+        const impl::rect<dst_scalar_type> result(rectangle.x(), client_height - rectangle.bottom(), rectangle.width(), rectangle.height());
+        return result;
+    }
+
+#ifdef _WINDEF_
+    using winRECT_scalar_t = decltype(RECT::left);
+#ifdef _TYPE_TRAITS_
+    template<typename ScalarT = int_fast32_t, std::enable_if_t<std::is_integral<ScalarT>::value, bool> = true>
+    inline constexpr RECT to_windows_RECT(const impl::rect<ScalarT, InvertedYAxis, RightOpenIntervals>& rectangle)
+    {
+        RECT result
+        {
+            static_cast<winRECT_scalar_t>(rectangle.left()),
+            static_cast<winRECT_scalar_t>(rectangle.top()),
+            static_cast<winRECT_scalar_t>(rectangle.right()),
+            static_cast<winRECT_scalar_t>(rectangle.bottom())
+        };
+        return result;
+    }
+#endif
+    inline constexpr impl::rect<winRECT_scalar_t, InvertedYAxis, RightOpenIntervals> from_windows_RECT(const RECT& rect)
+    {
+        const impl::rect<winRECT_scalar_t, InvertedYAxis, RightOpenIntervals> result(
             rect.left,
             rect.top,
             rect.right - rect.left,
             rect.bottom - rect.top
             );
+        return result;
     }
 #endif
 
 #ifdef __OBJC__
     template<typename ScalarT>
-    inline constexpr CGRect ConvertToCGRect(const impl::rect<ScalarT, InvertedYAxis, RightOpenIntervals>& rectangle)
+    inline constexpr CGRect to_CGRect(const impl::rect<ScalarT, InvertedYAxis, RightOpenIntervals>& rectangle)
     {
         CGRect result;
         result.origin.x     = rectangle.x;
@@ -390,7 +416,7 @@ namespace impl
     }
 
     template<typename ScalarT>
-    inline constexpr impl::rect<ScalarT, InvertedYAxis, RightOpenIntervals> ConvertToRectangle(const CGRect& rect)
+    inline constexpr impl::rect<ScalarT, InvertedYAxis, RightOpenIntervals> from_CGRect(const CGRect& rect)
     {
         return impl::rect<ScalarT, InvertedYAxis, RightOpenIntervals>(
             rect.origin.x,
@@ -428,8 +454,8 @@ namespace std
         stream << rhs.location() << L", " << rhs.size();
         return stream;
     }
-} // namespace std
 #endif _IOMANIP_
 #endif _OSTREAM_
+} // namespace std
 
 #endif

@@ -764,6 +764,135 @@ namespace clg { namespace impl
     };
 
     template<typename ScalarT>
+    class argb
+        : public base_vec<ScalarT, 4, argb<ScalarT>>
+    {
+    public:
+        using base = base_vec<ScalarT, 4, argb<ScalarT>>;
+        IMPLEMENT_COMMON_METHODS(argb);
+
+        // 32-bit (8888) color accessors for argb<byte>
+        ///////////////////////////////////////////////
+
+        template<typename T = scalar_type, std::enable_if_t<std::is_integral_v<T>, bool> = true>
+        static constexpr vec_type rgba32(const uint_fast32_t value)
+        {
+            return argb(value >> 0 & 0xff, value >> 24 & 0xff, value >> 16 & 0xff, value >> 8 & 0xff);
+        }
+
+        template<typename T = scalar_type, std::enable_if_t<std::is_integral_v<T>, bool> = true>
+        static constexpr vec_type argb32(const uint_fast32_t value)
+        {
+            return argb(value >> 24 & 0xff, value >> 16 & 0xff, value >> 8 & 0xff, value >> 0 & 0xff);
+        }
+
+        template<typename T = scalar_type, std::enable_if_t<std::is_integral_v<T>, bool> = true>
+        static constexpr vec_type abgr32(const uint_fast32_t value)
+        {
+            return argb(value >> 24 & 0xff, value >> 0 & 0xff, value >> 8 & 0xff, value >> 16 & 0xff);
+        }
+
+        template<typename T = scalar_type, std::enable_if_t<std::is_integral_v<T>, bool> = true>
+        static constexpr vec_type bgra32(const uint_fast32_t value)
+        {
+            return argb(value >> 0 & 0xff, value >> 8 & 0xff, value >> 16 & 0xff, value >> 24 & 0xff);
+        }
+
+        template<typename T = scalar_type, std::enable_if_t<std::is_integral_v<T>, bool> = true>
+        constexpr uint_fast32_t rgba32() const
+        {
+            return uint_fast32_t(r) << 24 | uint_fast32_t(g) << 16 | uint_fast32_t(b) << 8 | uint_fast32_t(a) << 0;
+        }
+
+        template<typename T = scalar_type, std::enable_if_t<std::is_integral_v<T>, bool> = true>
+        constexpr uint_fast32_t argb32() const
+        {
+            return uint_fast32_t(a) << 24 | uint_fast32_t(r) << 16 | uint_fast32_t(g) << 8 | uint_fast32_t(b) << 0;
+        }
+
+        template<typename T = scalar_type, std::enable_if_t<std::is_integral_v<T>, bool> = true>
+        constexpr uint_fast32_t abgr32() const
+        {
+            return uint_fast32_t(a) << 24 | uint_fast32_t(b) << 16 | uint_fast32_t(g) << 8 | uint_fast32_t(r) << 0;
+        }
+
+        template<typename T = scalar_type, std::enable_if_t<std::is_integral_v<T>, bool> = true>
+        constexpr uint_fast32_t bgra32() const
+        {
+            return uint_fast32_t(b) << 24 | uint_fast32_t(g) << 16 | uint_fast32_t(r) << 8 | uint_fast32_t(a) << 0;
+        }
+
+        // 32-bit (8888) color accessors for argb<float>
+        ////////////////////////////////////////////////
+
+        template<typename T = scalar_type, std::enable_if_t<std::is_floating_point_v<T>, bool> = true>
+        static constexpr vec_type rgba32(const uint_fast32_t value)
+        {
+            return argb((value >> 0 & 0xff) / 255.0f, (value >> 24 & 0xff) / 255.0f, (value >> 16 & 0xff) / 255.0f, (value >> 8 & 0xff) / 255.0f);
+        }
+
+        template<typename T = scalar_type, std::enable_if_t<std::is_floating_point_v<T>, bool> = true>
+        static constexpr vec_type argb32(const uint_fast32_t value)
+        {
+            return argb((value >> 24 & 0xff) / 255.0f, (value >> 16 & 0xff) / 255.0f, (value >> 8 & 0xff) / 255.0f, (value >> 0 & 0xff) / 255.0f);
+        }
+
+        template<typename T = scalar_type, std::enable_if_t<std::is_floating_point_v<T>, bool> = true>
+        static constexpr vec_type abgr32(const uint_fast32_t value)
+        {
+            return argb((value >> 24 & 0xff) / 255.0f, (value >> 0 & 0xff) / 255.0f, (value >> 8 & 0xff) / 255.0f, (value >> 16 & 0xff) / 255.0f);
+        }
+
+        template<typename T = scalar_type, std::enable_if_t<std::is_floating_point_v<T>, bool> = true>
+        static constexpr vec_type bgra32(const uint_fast32_t value)
+        {
+            return argb((value >> 0 & 0xff) / 255.0f, (value >> 8 & 0xff) / 255.0f, (value >> 16 & 0xff) / 255.0f, (value >> 24 & 0xff) / 255.0f);
+        }
+
+        template<typename T = scalar_type, std::enable_if_t<std::is_floating_point_v<T>, bool> = true>
+        constexpr uint_fast32_t rgba32() const
+        {
+            return static_cast<uint_fast32_t>(clg::clamp(r) * 255.0f) << 24 |
+                static_cast<uint_fast32_t>(clg::clamp(g) * 255.0f) << 16 |
+                static_cast<uint_fast32_t>(clg::clamp(b) * 255.0f) << 8 |
+                static_cast<uint_fast32_t>(clg::clamp(a) * 255.0f) << 0;
+        }
+
+        template<typename T = scalar_type, std::enable_if_t<std::is_floating_point_v<T>, bool> = true>
+        constexpr uint_fast32_t argb32() const
+        {
+            return static_cast<uint_fast32_t>(clg::clamp(a) * 255.0f) << 24 |
+                static_cast<uint_fast32_t>(clg::clamp(r) * 255.0f) << 16 |
+                static_cast<uint_fast32_t>(clg::clamp(g) * 255.0f) << 8 |
+                static_cast<uint_fast32_t>(clg::clamp(b) * 255.0f) << 0;
+        }
+
+        template<typename T = scalar_type, std::enable_if_t<std::is_floating_point_v<T>, bool> = true>
+        constexpr uint_fast32_t abgr32() const
+        {
+            return static_cast<uint_fast32_t>(clg::clamp(a) * 255.0f) << 24 |
+                static_cast<uint_fast32_t>(clg::clamp(b) * 255.0f) << 16 |
+                static_cast<uint_fast32_t>(clg::clamp(g) * 255.0f) << 8 |
+                static_cast<uint_fast32_t>(clg::clamp(r) * 255.0f) << 0;
+        }
+
+        template<typename T = scalar_type, std::enable_if_t<std::is_floating_point_v<T>, bool> = true>
+        constexpr uint_fast32_t bgra32() const
+        {
+            return static_cast<uint_fast32_t>(clg::clamp(b) * 255.0f) << 24 |
+                static_cast<uint_fast32_t>(clg::clamp(g) * 255.0f) << 16 |
+                static_cast<uint_fast32_t>(clg::clamp(r) * 255.0f) << 8 |
+                static_cast<uint_fast32_t>(clg::clamp(a) * 255.0f) << 0;
+        }
+
+        union
+        {
+            struct { scalar_type a, r, g, b; };
+            array_type _scalars;
+        };
+    };
+
+    template<typename ScalarT>
     class point
         : public base_vec<ScalarT, 2, point<ScalarT>>
     {
@@ -812,8 +941,10 @@ namespace clg { namespace impl
 
     using rgb       = impl::rgb<float>;
     using rgba      = impl::rgba<float>;
-    using rgbui     = impl::rgb<uint_fast8_t>;
-    using rgbaui    = impl::rgba<uint_fast8_t>;
+    using argb      = impl::argb<float>;
+    using rgbui     = impl::rgb<uint8_t>;
+    using rgbaui    = impl::rgba<uint8_t>;
+    using argbui    = impl::argb<uint8_t>;
 
     using point     = impl::point<float>;
     using pointi    = impl::point<int_fast32_t>;
