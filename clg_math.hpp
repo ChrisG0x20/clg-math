@@ -1,4 +1,4 @@
-﻿//
+//
 // Copyright (c) 2021 Christopher Gassib
 // Distributed under the Boost Software License, Version 1.0.
 // (See accompanying file LICENSE or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -43,6 +43,18 @@ namespace clg
         return trig<T>::two_pi - (toRadians - fromRadians);
     }
 
+    template<typename T = float>
+    inline constexpr const T min(const T lhs, const T rhs)
+    {
+        return rhs < lhs ? rhs : lhs;
+    }
+
+    template<typename T = float>
+    inline constexpr const T max(const T lhs, const T rhs)
+    {
+        return rhs < lhs ? lhs : rhs;
+    }
+
     // TODO: C++?? newer version finally adds this
     template<typename T = float>
     inline constexpr const T clamp(const T value, const T min = 0.0, const T max = 1.0)
@@ -58,7 +70,7 @@ namespace clg
         {
             return fmod(radians, trig<T>::two_pi);
         }
-        if (radians < 0.0)
+        if (radians < static_cast<T>(0.0))
         {
             return trig<T>::two_pi + fmod(radians, trig<T>::two_pi);
         }
@@ -79,7 +91,8 @@ namespace clg
     template<typename T, typename U>
     inline constexpr T round_to_integer(const U number)
     {
-        return static_cast<T>((number >= 0.0) ? number + 0.5 : number - 0.5);
+        return static_cast<T>((number >= static_cast<U>(0.0)) ?
+            number + static_cast<U>(0.5) : number - static_cast<U>(0.5));
     }
 
     // Rounds a number up to the nearest power of 2
@@ -108,13 +121,42 @@ namespace clg
         return ++number;
     }
 
-    // Nudges the pointer forward until it is aligned at byte granularity specified in the template parameter.
-    template<unsigned int BytesOfAlignment>
-    inline constexpr void* align_pointer(const void* const pUnaligned)
+    template<typename T>
+    inline constexpr T byte_swap(const T value)
     {
-        const char* const pByte = static_cast<const char* const>(pUnaligned);
+        static_assert(sizeof(T) >= 2 && sizeof(T) <= 8, "attempting to byte_swap an unsupported integer size");
+        if constexpr (2 == sizeof(T))
+        {
+            return value >> 8 | value << 8;
+        }
+        else if constexpr (4 == sizeof(T))
+        {
+            return value >> 24 | (value >> 8 & 0x0000ff00) | (value << 8 & 0x00ff0000) | value << 24;
+        }
+        else if constexpr (8 == sizeof(T))
+        {
+            return value >> 56 | (value >> 40 & 0x000000000000ff00) |
+                (value >> 24 & 0x0000000000ff0000) | (value >> 8 & 0x00000000ff000000) |
+                (value << 8 & 0x000000ff00000000) | (value << 24 & 0x0000ff0000000000) |
+                (value << 40 & 0x00ff000000000000) | value << 56;
+        }
+    }
+
+    // Nudges an integer count up until it is a multiple of the specified power of two in the template parameter.
+    template<unsigned int PowerOfTwo>
+    inline constexpr unsigned int round_up_to_alignment(const unsigned int odd_value)
+    {
+        const unsigned int alignment = PowerOfTwo - 1;
+        return (odd_value + alignment) & ~alignment;
+    }
+
+    // Nudges the pointer forward until it is aligned at byte granularity specified in the template parameter.
+    template<unsigned int BytesOfAlignment, typename pointerT>
+    inline constexpr pointerT align_pointer(const pointerT pUnaligned)
+    {
+        const char* const pByte = reinterpret_cast<const char* const>(pUnaligned);
         const uintptr_t alignment = BytesOfAlignment - 1;
-        return reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(pByte + alignment) & ~alignment);
+        return reinterpret_cast<pointerT>(reinterpret_cast<uintptr_t>(pByte + alignment) & ~alignment);
     }
 
     template<typename T, size_t S>
@@ -358,7 +400,7 @@ namespace clg
         {
             assert(nullptr != src && count <= static_cast<size_t>(dimension_count));
             auto i = 0u;
-            for (; i < std::min(static_cast<unsigned int>(count), dimension_count); i++)
+            for (; i < min(static_cast<unsigned int>(count), dimension_count); i++)
             {
                 dst[i] = src[i];
             }
@@ -619,7 +661,7 @@ namespace clg
         inline constexpr void cast_dimensions(const src_scalar_type(&src_vec)[src_count], dst_scalar_type(&dst_vec)[dst_count])
         {
             auto i = 0u;
-            for (; i < std::min(src_count, dst_count); i++)
+            for (; i < min(src_count, dst_count); i++)
             {
                 dst_vec[i] = static_cast<dst_scalar_type>(src_vec[i]);
             }
@@ -641,7 +683,7 @@ namespace clg
             for (auto j = 0u, k = 0u; j < column_count; j++)
             {
                 auto i = 0u;
-                for (; i < std::min(j, row_count); i++)
+                for (; i < min(j, row_count); i++)
                 {
                     dst[k++] = static_cast<scalar_type>(0.0);
                 }

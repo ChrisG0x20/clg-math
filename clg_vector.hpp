@@ -424,7 +424,10 @@ namespace clg { namespace impl
             mixture_constructor_unpack<next_index + arg_dimension_count>(args...);
         }
 
-        template<unsigned int next_index, typename T, std::enable_if_t<std::is_arithmetic_v<T>, bool> = true, typename... Args>
+        template<unsigned int next_index, typename T,
+            std::enable_if_t<std::is_arithmetic_v<T>, bool> = true,
+            std::enable_if_t<!std::is_same_v<scalar_type, T>, bool> = true,
+            typename... Args>
         constexpr void mixture_constructor_unpack(const T next_arg, const Args&... args)
         {
             static_cast<ref_type>(*this)._scalars[next_index] = static_cast<scalar_type>(next_arg);
@@ -1007,7 +1010,7 @@ namespace std
         stream << L" )";
         return stream;
     }
-#endif _OSTREAM_
+#endif // _OSTREAM_
 } // namespace std
 
 #endif

@@ -152,12 +152,27 @@ namespace impl
 
         constexpr scalar_type top() const
         {
-            return impl_get_top<y_axes_policy>();
+            if constexpr (std::is_same_v<YAxesPolicy, StandardYAxis>)
+            {
+                return _location.y + _size.height;
+            }
+            else
+            {
+                return _location.y;
+            }
         }
 
         constexpr void top(const scalar_type value)
         {
-            impl_set_top<y_axes_policy>(value);
+            if constexpr (std::is_same_v<YAxesPolicy, StandardYAxis>)
+            {
+                _size.height = value - _location.y;
+            }
+            else
+            {
+                _size.height = _size.height + (_location.y - value);
+                _location.y = value;
+            }
         }
 
         constexpr scalar_type right() const
@@ -172,12 +187,27 @@ namespace impl
 
         constexpr scalar_type bottom() const
         {
-            return impl_get_bottom<y_axes_policy>();
+            if constexpr (std::is_same_v<YAxesPolicy, StandardYAxis>)
+            {
+                return _location.y;
+            }
+            else
+            {
+                return _location.y + _size.height;
+            }
         }
 
         constexpr void bottom(const scalar_type value)
         {
-            impl_set_bottom<y_axes_policy>(value);
+            if constexpr (std::is_same_v<YAxesPolicy, StandardYAxis>)
+            {
+                _size.height = _size.height + (_location.y - value);
+                _location.y = value;
+            }
+            else
+            {
+                _size.height = value - _location.y;
+            }
         }
 
         constexpr bool operator ==(const rect& rhs) const
@@ -192,20 +222,72 @@ namespace impl
 
         constexpr bool contains(const point_type& point) const
         {
-            return impl_contains<bounds_check_policy>(point);
+            if constexpr (std::is_same_v<BoundsCheckPolicy, ClosedIntervals>)
+            {
+                if (point.x < _location.x || point.y < _location.y)
+                {
+                    return false;
+                }
+
+                if ( right() < point.x || top() < point.y) // NOTE: Inclusive coordinates.
+                {
+                    return false;
+                }
+
+                return true;
+            }
+            else
+            {
+                if (point.x < _location.x || point.y < _location.y)
+                {
+                    return false;
+                }
+
+                if ( right() <= point.x || bottom() <= point.y) // NOTE: Exclusive coordinates.
+                {
+                    return false;
+                }
+
+                return true;
+            }
         }
 
         constexpr bool overlaps(const rect& rectangle) const
         {
-            return impl_overlaps<bounds_check_policy>(rectangle);
+            if constexpr (std::is_same_v<BoundsCheckPolicy, ClosedIntervals>)
+            {
+                 // NOTE: Inclusive coordinate checks.
+                if (right() < rectangle.left() || rectangle.right() < left())
+                {
+                    return false;
+                }
+                if (top() < rectangle.bottom() || rectangle.top() < bottom())
+                {
+                    return false;
+                }
+                return true;
+            }
+            else
+            {
+                // NOTE: Exclusive coordinate checks.
+               if (right() <= rectangle.left() || rectangle.right() <= left())
+               {
+                   return false;
+               }
+               if (bottom() <= rectangle.top() || rectangle.bottom() <= top())
+               {
+                   return false;
+               }
+               return true;
+            }
         }
 
         constexpr rect make_union(const rect& rectangle) const
         {
-            const auto x = std::min(_location.x, rectangle._location.x);
-            const auto y = std::min(_location.y, rectangle._location.y);
-            const auto w = std::max(_location.x + _size.width,  rectangle._location.x + rectangle._size.width ) - x;
-            const auto h = std::max(_location.y + _size.height, rectangle._location.y + rectangle._size.height) - y;
+            const auto x = min(_location.x, rectangle._location.x);
+            const auto y = min(_location.y, rectangle._location.y);
+            const auto w = max(_location.x + _size.width,  rectangle._location.x + rectangle._size.width ) - x;
+            const auto h = max(_location.y + _size.height, rectangle._location.y + rectangle._size.height) - y;
             return rect(x, y, w, h);
         }
 
@@ -216,136 +298,6 @@ namespace impl
         }
 
     private:
-        template<typename YAxesPolicy>
-        constexpr scalar_type impl_get_top() const;
-
-        template<>
-        constexpr scalar_type impl_get_top<StandardYAxis>() const
-        {
-            return _location.y + _size.height;
-        }
-
-        template<>
-        constexpr scalar_type impl_get_top<InvertedYAxis>() const
-        {
-            return _location.y;
-        }
-
-        template<typename YAxesPolicy>
-        constexpr void impl_set_top(const scalar_type value);
-
-        template<>
-        constexpr void impl_set_top<StandardYAxis>(const scalar_type value)
-        {
-            _size.height = value - _location.y;
-        }
-
-        template<>
-        constexpr void impl_set_top<InvertedYAxis>(const scalar_type value)
-        {
-            _size.height = _size.height + (_location.y - value);
-            _location.y = value;
-        }
-
-        template<typename YAxesPolicy>
-        constexpr scalar_type impl_get_bottom() const;
-
-        template<>
-        constexpr scalar_type impl_get_bottom<StandardYAxis>() const
-        {
-            return _location.y;
-        }
-
-        template<>
-        constexpr scalar_type impl_get_bottom<InvertedYAxis>() const
-        {
-            return _location.y + _size.height;
-        }
-
-        template<typename YAxesPolicy>
-        constexpr void impl_set_bottom(const scalar_type value);
-
-        template<>
-        constexpr void impl_set_bottom<StandardYAxis>(const scalar_type value)
-        {
-            _size.height = _size.height + (_location.y - value);
-            _location.y = value;
-        }
-
-        template<>
-        constexpr void impl_set_bottom<InvertedYAxis>(const scalar_type value)
-        {
-            _size.height = value - _location.y;
-        }
-
-        template<typename BoundsCheckPolicy>
-        constexpr bool impl_contains(const point_type& point) const;
-
-        template<>
-        constexpr bool impl_contains<ClosedIntervals>(const point_type& point) const
-        {
-            if (point.x < _location.x || point.y < _location.y)
-            {
-                return false;
-            }
-
-            if ( right() < point.x || top() < point.y) // NOTE: Inclusive coordinates.
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        template<>
-        constexpr bool impl_contains<RightOpenIntervals>(const point_type& point) const
-        {
-            if (point.x < _location.x || point.y < _location.y)
-            {
-                return false;
-            }
-
-            if ( right() <= point.x || bottom() <= point.y) // NOTE: Exclusive coordinates.
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        template<typename BoundsCheckPolicy>
-        constexpr bool impl_overlaps(const rect& rectangle) const;
-
-        template<>
-        constexpr bool impl_overlaps<ClosedIntervals>(const rect& rectangle) const
-        {
-             // NOTE: Inclusive coordinate checks.
-            if (right() < rectangle.left() || rectangle.right() < left())
-            {
-                return false;
-            }
-            if (top() < rectangle.bottom() || rectangle.top() < bottom())
-            {
-                return false;
-            }
-            return true;
-        }
-
-        template<>
-        constexpr bool impl_overlaps<RightOpenIntervals>(const rect& rectangle) const
-        {
-             // NOTE: Exclusive coordinate checks.
-            if (right() <= rectangle.left() || rectangle.right() <= left())
-            {
-                return false;
-            }
-            if (bottom() <= rectangle.top() || rectangle.bottom() <= top())
-            {
-                return false;
-            }
-            return true;
-        }
-
         point_type  _location;
         size_type   _size;
     };
@@ -454,8 +406,8 @@ namespace std
         stream << rhs.location() << L", " << rhs.size();
         return stream;
     }
-#endif _IOMANIP_
-#endif _OSTREAM_
+#endif // _IOMANIP_
+#endif // _OSTREAM_
 } // namespace std
 
 #endif
